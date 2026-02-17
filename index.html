@@ -1,217 +1,293 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Nutrição</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="dashboard.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>Sistema de Nutrição</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fas fa-apple-alt"></i>
-                <h1>NutriSystem</h1>
-            </div>
-            <nav class="nav">
-                <a href="#" class="nav-item active" data-section="pacientes">
-                    <i class="fas fa-users"></i> Pacientes
-                </a>
-                <a href="#" class="nav-item" data-section="calendario">
-                    <i class="fas fa-calendar"></i> Calendário
-                </a>
-                <a href="#" class="nav-item" data-section="pagamentos">
-                    <i class="fas fa-dollar-sign"></i> Pagamentos
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <button class="btn-secondary" onclick="exportarBackup()">
-                    <i class="fas fa-download"></i> Exportar Backup
-                </button>
-                <label class="btn-secondary" style="cursor: pointer; margin-top: 10px; display: block; text-align: center;">
-                    <i class="fas fa-upload"></i> Importar Backup
-                    <input type="file" accept=".json" onchange="importarBackup(event)" style="display: none;">
-                </label>
-            </div>
-        </aside>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fas fa-apple-alt" aria-hidden="true"></i>
+        <h1>NutriSystem</h1>
+      </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- PACIENTES -->
-            <section id="pacientes" class="content-section active">
-                <div class="section-header">
-                    <h2>Pacientes</h2>
-                    <button class="btn-primary" onclick="abrirModalNovoPaciente()">
-                        <i class="fas fa-plus"></i> Novo Paciente
-                    </button>
-                </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchPaciente" placeholder="Buscar paciente..." onkeyup="filtrarPacientes()">
-                </div>
-                <div id="listaPacientes"></div>
-            </section>
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#" class="nav-item active" data-section="pacientes">
+          <i class="fas fa-users" aria-hidden="true"></i> Pacientes
+        </a>
+        <a href="#" class="nav-item" data-section="calendario">
+          <i class="fas fa-calendar" aria-hidden="true"></i> Calendário
+        </a>
+        <a href="#" class="nav-item" data-section="pagamentos">
+          <i class="fas fa-dollar-sign" aria-hidden="true"></i> Pagamentos
+        </a>
+      </nav>
 
-            <!-- CALENDÁRIO -->
-            <section id="calendario" class="content-section">
-                <div class="section-header">
-                    <h2>Calendário de Consultas</h2>
-                    <button class="btn-primary" onclick="abrirModalNovaConsulta()">
-                        <i class="fas fa-plus"></i> Nova Consulta
-                    </button>
-                </div>
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <button class="btn-secondary" onclick="mesAnterior()">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <h3 id="mesAno"></h3>
-                        <button class="btn-secondary" onclick="proximoMes()">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    <div id="calendarioGrid" class="calendar-grid"></div>
-                </div>
-                <div class="consultas-dia-container">
-                    <h3>Consultas do Dia</h3>
-                    <div id="consultasDia"></div>
-                </div>
-            </section>
+      <div class="sidebar-footer">
+        <button type="button" class="btn-secondary" onclick="exportarBackup()">
+          <i class="fas fa-download" aria-hidden="true"></i> Exportar Backup
+        </button>
 
-            <!-- PAGAMENTOS -->
-            <section id="pagamentos" class="content-section">
-                <div class="section-header">
-                    <h2>Controle de Pagamentos</h2>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
-                        <i class="fas fa-check-circle" style="color: #059669;"></i>
-                        <div>
-                            <p>Total Pago</p>
-                            <h3 id="totalPago" style="color: #059669;">R$ 0,00</h3>
-                        </div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
-                        <i class="fas fa-exclamation-circle" style="color: #dc2626;"></i>
-                        <div>
-                            <p>Vencidos</p>
-                            <h3 id="totalVencido" style="color: #dc2626;">R$ 0,00</h3>
-                        </div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-                        <i class="fas fa-clock" style="color: #d97706;"></i>
-                        <div>
-                            <p>Pendentes</p>
-                            <h3 id="totalPendente" style="color: #d97706;">R$ 0,00</h3>
-                        </div>
-                    </div>
-                </div>
-                <div id="listaPagamentos"></div>
-            </section>
-        </main>
-    </div>
+        <label class="btn-secondary" style="cursor: pointer; margin-top: 10px; display: block; text-align: center;">
+          <i class="fas fa-upload" aria-hidden="true"></i> Importar Backup
+          <input type="file" accept=".json" onchange="importarBackup(event)" style="display: none;">
+        </label>
+      </div>
+    </aside>
 
-    <!-- MODAL PACIENTE -->
-    <div id="modalPaciente" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModal('modalPaciente')">&times;</span>
-            <h2>Novo Paciente</h2>
-            <form id="formPaciente" onsubmit="salvarPaciente(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nome Completo *</label>
-                        <input type="text" id="nomePaciente" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Idade *</label>
-                        <input type="number" id="idadePaciente" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="tel" id="whatsappPaciente" placeholder="(00) 00000-0000">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Plano *</label>
-                        <select id="planoPaciente" onchange="mostrarOpcaoPagamento()" required>
-                            <option value="">Selecione...</option>
-                            <option value="Mensal">Mensal - R$ 150/mês</option>
-                            <option value="Trimestral">Trimestral - R$ 420 (ou 3x R$ 150)</option>
-                            <option value="Semestral">Semestral - R$ 780 (ou 6x R$ 135)</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="formaPagamentoDiv" style="display: none;">
-                    <div class="form-group">
-                        <label>Forma de Pagamento *</label>
-                        <select id="formaPagamento">
-                            <option value="vista">À vista (desconto aplicado)</option>
-                            <option value="parcelado">Parcelado</option>
-                        </select>
-                        <small id="infoParcelas" style="color: #667eea; display: block; margin-top: 5px;"></small>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Data da Primeira Consulta</label>
-                        <input type="date" id="primeiraConsulta">
-                    </div>
-                    <div class="form-group">
-                        <label>Data do Próximo Retorno</label>
-                        <input type="date" id="proximoRetorno">
-                    </div>
-                </div>
-                <div class="form-buttons">
-                    <button type="button" class="btn-secondary" onclick="fecharModal('modalPaciente')">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar</button>
-                </div>
-            </form>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- PACIENTES -->
+      <section id="pacientes" class="content-section active">
+        <div class="section-header">
+          <h2>Pacientes</h2>
+          <button type="button" class="btn-primary" onclick="abrirModalNovoPaciente()">
+            <i class="fas fa-plus" aria-hidden="true"></i> Novo Paciente
+          </button>
         </div>
-    </div>
 
-    <!-- MODAL CONSULTA -->
-    <div id="modalConsulta" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModal('modalConsulta')">&times;</span>
-            <h2>Nova Consulta</h2>
-            <form id="formConsulta" onsubmit="salvarConsulta(event)">
-                <div class="form-group">
-                    <label>Paciente *</label>
-                    <select id="pacienteConsulta" required>
-                        <option value="">Selecione...</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Data *</label>
-                        <input type="date" id="dataConsulta" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Horário *</label>
-                        <input type="time" id="horarioConsulta" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Consulta *</label>
-                    <select id="tipoConsulta" required>
-                        <option value="Primeira Consulta">Primeira Consulta</option>
-                        <option value="Retorno">Retorno</option>
-                        <option value="Avaliação">Avaliação</option>
-                    </select>
-                </div>
-                <div class="form-buttons">
-                    <button type="button" class="btn-secondary" onclick="fecharModal('modalConsulta')">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar</button>
-                </div>
-            </form>
+        <div class="search-box">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="searchPaciente"
+            placeholder="Buscar paciente..."
+            onkeyup="filtrarPacientes()"
+            autocomplete="off"
+            spellcheck="false"
+          >
         </div>
-    </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="dashboard.js"></script>
+        <div id="listaPacientes"></div>
+      </section>
+
+      <!-- CALENDÁRIO -->
+      <section id="calendario" class="content-section">
+        <div class="section-header">
+          <h2>Calendário de Consultas</h2>
+          <button type="button" class="btn-primary" onclick="abrirModalNovaConsulta()">
+            <i class="fas fa-plus" aria-hidden="true"></i> Nova Consulta
+          </button>
+        </div>
+
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button type="button" class="btn-secondary" onclick="mesAnterior()" aria-label="Mês anterior">
+              <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <h3 id="mesAno"></h3>
+            <button type="button" class="btn-secondary" onclick="proximoMes()" aria-label="Próximo mês">
+              <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div id="calendarioGrid" class="calendar-grid"></div>
+        </div>
+
+        <div class="consultas-dia-container">
+          <h3>Consultas do Dia</h3>
+          <div id="consultasDia"></div>
+        </div>
+      </section>
+
+      <!-- PAGAMENTOS -->
+      <section id="pagamentos" class="content-section">
+        <div class="section-header">
+          <h2>Controle de Pagamentos</h2>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+            <i class="fas fa-check-circle" style="color: #059669;" aria-hidden="true"></i>
+            <div>
+              <p>Total Pago</p>
+              <h3 id="totalPago" style="color: #059669;">R$ 0,00</h3>
+            </div>
+          </div>
+
+          <div class="stat-card" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+            <i class="fas fa-exclamation-circle" style="color: #dc2626;" aria-hidden="true"></i>
+            <div>
+              <p>Vencidos</p>
+              <h3 id="totalVencido" style="color: #dc2626;">R$ 0,00</h3>
+            </div>
+          </div>
+
+          <div class="stat-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+            <i class="fas fa-clock" style="color: #d97706;" aria-hidden="true"></i>
+            <div>
+              <p>Pendentes</p>
+              <h3 id="totalPendente" style="color: #d97706;">R$ 0,00</h3>
+            </div>
+          </div>
+        </div>
+
+        <div id="listaPagamentos"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL PACIENTE -->
+  <div id="modalPaciente" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalPaciente">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal('modalPaciente')" aria-label="Fechar modal">&times;</span>
+      <h2 id="tituloModalPaciente">Novo Paciente</h2>
+
+      <!-- Mantido: onsubmit="salvarPaciente(event)" e mesmos IDs -->
+      <form id="formPaciente" onsubmit="salvarPaciente(event)">
+        <div class="form-sections">
+          <details class="form-block" open>
+            <summary>
+              Dados básicos <span class="badge">Obrigatório</span>
+            </summary>
+            <div class="details-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nomePaciente">Nome Completo *</label>
+                  <input
+                    type="text"
+                    id="nomePaciente"
+                    required
+                    autocomplete="name"
+                    placeholder="Ex: Maria Silva"
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="idadePaciente">Idade *</label>
+                  <input
+                    type="number"
+                    id="idadePaciente"
+                    required
+                    min="0"
+                    max="120"
+                    inputmode="numeric"
+                    placeholder="Ex: 32"
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="whatsappPaciente">WhatsApp</label>
+                <input
+                  type="tel"
+                  id="whatsappPaciente"
+                  inputmode="tel"
+                  autocomplete="tel"
+                  placeholder="(21) 99999-9999"
+                >
+              </div>
+            </div>
+          </details>
+
+          <details class="form-block" open>
+            <summary>
+              Plano e pagamento <span class="badge">Obrigatório</span>
+            </summary>
+            <div class="details-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="planoPaciente">Plano *</label>
+                  <select id="planoPaciente" onchange="mostrarOpcaoPagamento()" required>
+                    <option value="">Selecione...</option>
+                    <option value="Mensal">Mensal - R$ 150/mês</option>
+                    <option value="Trimestral">Trimestral - R$ 420 (ou 3x R$ 150)</option>
+                    <option value="Semestral">Semestral - R$ 780 (ou 6x R$ 135)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="formaPagamentoDiv" style="display: none;">
+                <div class="form-group">
+                  <label for="formaPagamento">Forma de Pagamento *</label>
+                  <select id="formaPagamento" aria-describedby="infoParcelas">
+                    <option value="vista">À vista (desconto aplicado)</option>
+                    <option value="parcelado">Parcelado</option>
+                  </select>
+                  <small id="infoParcelas" style="color: #667eea; display: block; margin-top: 5px;"></small>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="form-block">
+            <summary>
+              Datas (opcional) <span class="badge">Rápido</span>
+            </summary>
+            <div class="details-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="primeiraConsulta">Data da Primeira Consulta</label>
+                  <input type="date" id="primeiraConsulta" autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label for="proximoRetorno">Data do Próximo Retorno</label>
+                  <input type="date" id="proximoRetorno" autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="form-buttons">
+          <button type="button" class="btn-secondary" onclick="fecharModal('modalPaciente')">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CONSULTA -->
+  <div id="modalConsulta" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalConsulta">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal('modalConsulta')" aria-label="Fechar modal">&times;</span>
+      <h2 id="tituloModalConsulta">Nova Consulta</h2>
+
+      <form id="formConsulta" onsubmit="salvarConsulta(event)">
+        <div class="form-group">
+          <label for="pacienteConsulta">Paciente *</label>
+          <select id="pacienteConsulta" required>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dataConsulta">Data *</label>
+            <input type="date" id="dataConsulta" required>
+          </div>
+          <div class="form-group">
+            <label for="horarioConsulta">Horário *</label>
+            <input type="time" id="horarioConsulta" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tipoConsulta">Tipo de Consulta *</label>
+          <select id="tipoConsulta" required>
+            <option value="Primeira Consulta">Primeira Consulta</option>
+            <option value="Retorno">Retorno</option>
+            <option value="Avaliação">Avaliação</option>
+          </select>
+        </div>
+
+        <div class="form-buttons">
+          <button type="button" class="btn-secondary" onclick="fecharModal('modalConsulta')">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
