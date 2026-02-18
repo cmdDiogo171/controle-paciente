@@ -1168,12 +1168,13 @@ function importarBackup(e) {
     consultas = dados.consultas || [];
     pagamentos = dados.pagamentos || [];
 
-    localStorage.setItem('pacientes', JSON.stringify(pacientes));
-    localStorage.setItem('consultas', JSON.stringify(consultas));
-    localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
+localStorage.setItem('pacientes', JSON.stringify(pacientes));
+localStorage.setItem('consultas', JSON.stringify(consultas));
+localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
 
+Promise
+  .resolve(window.cloudPush?.())
+  .finally(() => {
     alert('Backup restaurado com sucesso!');
     location.reload();
-  };
-  reader.readAsText(file);
-}
+  });
