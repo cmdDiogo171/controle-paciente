@@ -1164,17 +1164,22 @@ function importarBackup(e) {
   const reader = new FileReader();
   reader.onload = (event) => {
     const dados = JSON.parse(event.target.result);
+
     pacientes = dados.pacientes || [];
     consultas = dados.consultas || [];
     pagamentos = dados.pagamentos || [];
 
-localStorage.setItem('pacientes', JSON.stringify(pacientes));
-localStorage.setItem('consultas', JSON.stringify(consultas));
-localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
+    localStorage.setItem('pacientes', JSON.stringify(pacientes));
+    localStorage.setItem('consultas', JSON.stringify(consultas));
+    localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
 
-Promise
-  .resolve(window.cloudPush?.())
-  .finally(() => {
-    alert('Backup restaurado com sucesso!');
-    location.reload();
-  });
+    Promise
+      .resolve(window.cloudPush?.())
+      .finally(() => {
+        alert('Backup restaurado com sucesso!');
+        location.reload();
+      });
+  };
+
+  reader.readAsText(file);
+}
