@@ -1,19 +1,23 @@
-<!-- dashboard.html -->
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <title>Sistema de Nutrição</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Controle de Pacientes</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="dashboard.css">
 </head>
+
 <body>
   <div class="container">
     <!-- Sidebar -->
     <aside class="sidebar">
+      <div class="logo">
+        <!-- logo removida -->
+      </div>
 
       <nav class="nav" aria-label="Navegação principal">
         <a href="#" class="nav-item active" data-section="pacientes">
@@ -148,37 +152,17 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="nomePaciente">Nome Completo *</label>
-                  <input
-                    type="text"
-                    id="nomePaciente"
-                    required
-                    autocomplete="name"
-                    placeholder="Ex: Maria Silva"
-                  >
+                  <input type="text" id="nomePaciente" required autocomplete="name" placeholder="Ex: Maria Silva">
                 </div>
                 <div class="form-group">
                   <label for="idadePaciente">Idade *</label>
-                  <input
-                    type="number"
-                    id="idadePaciente"
-                    required
-                    min="0"
-                    max="120"
-                    inputmode="numeric"
-                    placeholder="Ex: 32"
-                  >
+                  <input type="number" id="idadePaciente" required min="0" max="120" inputmode="numeric" placeholder="Ex: 32">
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="whatsappPaciente">WhatsApp</label>
-                <input
-                  type="tel"
-                  id="whatsappPaciente"
-                  inputmode="tel"
-                  autocomplete="tel"
-                  placeholder="(21) 99999-9999"
-                >
+                <input type="tel" id="whatsappPaciente" inputmode="tel" autocomplete="tel" placeholder="(21) 99999-9999">
               </div>
             </div>
           </details>
@@ -219,7 +203,6 @@
             </summary>
 
             <div class="details-body">
-              <!-- Datas -->
               <div class="form-row">
                 <div class="form-group">
                   <label for="primeiraConsulta">Data da Primeira Consulta</label>
@@ -232,7 +215,6 @@
                 </div>
               </div>
 
-              <!-- Horários (NOVO) -->
               <div class="form-row">
                 <div class="form-group">
                   <label for="horarioPrimeiraConsulta">Horário 1ª consulta</label>
@@ -245,7 +227,6 @@
                 </div>
               </div>
 
-              <!-- Vencimento 1ª parcela (NOVO) -->
               <div class="form-group">
                 <label for="vencimentoPrimeiraParcela">Vencimento 1ª parcela</label>
                 <input type="date" id="vencimentoPrimeiraParcela" autocomplete="off">
@@ -304,8 +285,13 @@
     </div>
   </div>
 
-  <!-- Chart.js -->
+  <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase sync (TEM que vir antes do dashboard.js) -->
+  <script type="module" src="firebase-sync.js"></script>
+
+  <!-- Seu app -->
   <script src="dashboard.js"></script>
 </body>
 </html>
