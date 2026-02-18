@@ -14,7 +14,9 @@ const cores = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a',
 // LIMPA CONSULTAS INVÁLIDAS (pacientes que não existem mais)
 // =====================
 function limparConsultasInvalidas() {
-  consultas = consultas.filter(c => c.pacienteIndex >= 0 && c.pacienteIndex < pacientes.length);
+  consultas = consultas.filter(c => {
+    return c.pacienteIndex >= 0 && c.pacienteIndex < pacientes.length;
+  });
   localStorage.setItem('consultas', JSON.stringify(consultas));
 }
 
@@ -22,18 +24,11 @@ function limparConsultasInvalidas() {
 // Inicialização
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
-  limparConsultasInvalidas();
+  limparConsultasInvalidas(); // LIMPA CONSULTAS INVÁLIDAS
   inicializarNavegacao();
   carregarPacientes();
   carregarCalendario();
   carregarPagamentos();
-
-  bindModalUX();
-  bindAutosaveDraftPaciente();
-
-  // Marcação padrão do modal paciente
-  const modalPaciente = document.getElementById('modalPaciente');
-  if (modalPaciente) modalPaciente.dataset.mode = 'new';
 });
 
 // =====================
@@ -79,13 +74,11 @@ function carregarPacientes() {
       .substring(0, 2)
       .toUpperCase();
 
-    const primeiraConsulta = paciente.primeiraConsulta
-      ? `Primeira consulta: ${new Date(paciente.primeiraConsulta + 'T00:00:00').toLocaleDateString('pt-BR')}`
-      : '';
+    const primeiraConsulta = paciente.primeiraConsulta ?
+      `Primeira consulta: ${new Date(paciente.primeiraConsulta + 'T00:00:00').toLocaleDateString('pt-BR')}` : '';
 
-    const proximoRetorno = paciente.proximoRetorno
-      ? `Retorno: ${new Date(paciente.proximoRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}`
-      : 'Retorno não agendado';
+    const proximoRetorno = paciente.proximoRetorno ?
+      `Retorno: ${new Date(paciente.proximoRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Retorno não agendado';
 
     const card = document.createElement('div');
     card.className = 'paciente-card';
@@ -96,8 +89,7 @@ function carregarPacientes() {
           <h3>${paciente.nome}</h3>
           <p>${paciente.idade} anos ${paciente.whatsapp ? '• ' + paciente.whatsapp : ''}</p>
           <p style="margin-top: 8px; font-size: 13px; color: #667eea;">
-            <strong>Plano:</strong> ${paciente.plano || 'Não definido'}
-            ${paciente.formaPagamento ? '(' + (paciente.formaPagamento === 'vista' ? 'à vista' : 'parcelado') + ')' : ''}
+            <strong>Plano:</strong> ${paciente.plano || 'Não definido'} ${paciente.formaPagamento ? '(' + (paciente.formaPagamento === 'vista' ? 'à vista' : 'parcelado') + ')' : ''}
           </p>
           <p style="font-size: 13px; color: #666;">
             ${primeiraConsulta} ${primeiraConsulta && proximoRetorno ? '•' : ''} ${proximoRetorno}
@@ -123,7 +115,6 @@ function carregarPacientes() {
         </div>
       </div>
     `;
-
     lista.appendChild(card);
   });
 }
@@ -134,7 +125,6 @@ function gerarResumoUltimaAvaliacao(prontuario) {
   }
 
   const ultima = prontuario.historico[prontuario.historico.length - 1];
-
   return `
     <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
       <strong>Última avaliação:</strong> ${new Date(ultima.data).toLocaleDateString('pt-BR')}
@@ -149,7 +139,7 @@ function gerarResumoUltimaAvaliacao(prontuario) {
 
 function togglePaciente(index) {
   const card = document.querySelectorAll('.paciente-card')[index];
-  if (card) card.classList.toggle('expanded');
+  card.classList.toggle('expanded');
 }
 
 function filtrarPacientes() {
@@ -164,18 +154,17 @@ function filtrarPacientes() {
 // Modal Novo Paciente
 // =====================
 function abrirModalNovoPaciente() {
-  const modal = document.getElementById('modalPaciente');
-  modal.classList.add('active');
-  modal.dataset.mode = 'new';
-
-  const form = document.getElementById('formPaciente');
-  form.reset();
-
+  document.getElementById('modalPaciente').classList.add('active');
+  document.getElementById('formPaciente').reset();
   document.getElementById('formaPagamentoDiv').style.display = 'none';
-  form.onsubmit = salvarPaciente;
 
-  aplicarDraftPacienteSeExistir();
-  focusPrimeiroCampo('modalPaciente');
+  // defaults
+  const hp = document.getElementById('horarioPrimeiraConsulta');
+  const hr = document.getElementById('horarioRetorno');
+  if (hp && !hp.value) hp.value = '09:00';
+  if (hr && !hr.value) hr.value = '09:00';
+
+  document.getElementById('formPaciente').onsubmit = salvarPaciente;
 }
 
 function mostrarOpcaoPagamento() {
@@ -196,42 +185,60 @@ function mostrarOpcaoPagamento() {
   }
 }
 
+// helpers
+function normalizarHora(valor, fallback = '09:00') {
+  const v = (valor || '').trim();
+  return v ? v : fallback;
+}
+
+function addMonthsISO(isoDate, months) {
+  const d = new Date(isoDate + 'T00:00:00');
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split('T')[0];
+}
+
 function salvarPaciente(e) {
   e.preventDefault();
 
   const plano = document.getElementById('planoPaciente').value;
   const primeiraConsulta = document.getElementById('primeiraConsulta').value;
   const proximoRetorno = document.getElementById('proximoRetorno').value;
+  const formaPagamento = document.getElementById('formaPagamento').value;
 
-  // Se o plano for Mensal, força vista (e o select pode estar escondido)
-  const formaPagamentoEl = document.getElementById('formaPagamento');
-  const formaPagamento = (plano === 'Mensal')
-    ? 'vista'
-    : (formaPagamentoEl ? formaPagamentoEl.value : 'vista');
+  const horarioPrimeiraConsulta = normalizarHora(document.getElementById('horarioPrimeiraConsulta')?.value, '09:00');
+  const horarioRetorno = normalizarHora(document.getElementById('horarioRetorno')?.value, '09:00');
+  const vencimentoPrimeiraParcela = document.getElementById('vencimentoPrimeiraParcela')?.value || null;
 
   const novoPaciente = {
     id: Date.now(),
     nome: document.getElementById('nomePaciente').value,
     idade: document.getElementById('idadePaciente').value,
     whatsapp: document.getElementById('whatsappPaciente').value,
-    plano,
-    formaPagamento,
-    primeiraConsulta,
-    proximoRetorno,
+    plano: plano,
+    formaPagamento: formaPagamento,
+    primeiraConsulta: primeiraConsulta,
+    proximoRetorno: proximoRetorno,
+
+    // novos campos (pra editar depois sem perder)
+    horarioPrimeiraConsulta,
+    horarioRetorno,
+    vencimentoPrimeiraParcela,
+
     prontuario: { historico: [] }
   };
 
   const pacienteIndex = pacientes.length;
   pacientes.push(novoPaciente);
 
-  gerarPagamentosAutomaticos(novoPaciente.id, plano, primeiraConsulta, formaPagamento);
+  // Base do vencimento: vencimentoPrimeiraParcela (se preenchido) senão primeiraConsulta
+  gerarPagamentosAutomaticos(novoPaciente.id, plano, primeiraConsulta, formaPagamento, vencimentoPrimeiraParcela);
 
   if (primeiraConsulta) {
     consultas.push({
       id: Date.now(),
-      pacienteIndex,
+      pacienteIndex: pacienteIndex,
       data: primeiraConsulta,
-      horario: '09:00',
+      horario: horarioPrimeiraConsulta,
       tipo: 'Primeira Consulta'
     });
   }
@@ -239,9 +246,9 @@ function salvarPaciente(e) {
   if (proximoRetorno) {
     consultas.push({
       id: Date.now() + 1,
-      pacienteIndex,
+      pacienteIndex: pacienteIndex,
       data: proximoRetorno,
-      horario: '09:00',
+      horario: horarioRetorno,
       tipo: 'Retorno'
     });
   }
@@ -249,17 +256,19 @@ function salvarPaciente(e) {
   localStorage.setItem('pacientes', JSON.stringify(pacientes));
   localStorage.setItem('consultas', JSON.stringify(consultas));
 
-  clearDraftPaciente();
   fecharModal('modalPaciente');
-
   carregarPacientes();
   atualizarSelectsPacientes();
   carregarCalendario();
   carregarPagamentos();
 }
 
-function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagamento) {
+// vencimentoInicial = data (YYYY-MM-DD) opcional para 1ª parcela
+function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagamento, vencimentoInicial = null) {
   if (!plano || !dataInicio) return;
+
+  // Se o usuário escolheu o vencimento da 1ª parcela, ele manda.
+  const base = vencimentoInicial || dataInicio;
 
   let numParcelas = 0;
   let valorParcela = 0;
@@ -287,19 +296,18 @@ function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagament
   }
 
   for (let i = 0; i < numParcelas; i++) {
-    const dataVencimento = new Date(dataInicio + 'T00:00:00');
-    dataVencimento.setDate(dataVencimento.getDate() + (i * 30));
+    const vencimento = addMonthsISO(base, i);
 
-    const descricao = (numParcelas === 1)
+    const descricao = numParcelas === 1
       ? `${plano} - À vista`
       : `${plano} - Parcela ${i + 1}/${numParcelas}`;
 
     pagamentos.push({
       id: Date.now() + i,
-      pacienteId,
+      pacienteId: pacienteId,
       valor: valorParcela,
-      vencimento: dataVencimento.toISOString().split('T')[0],
-      descricao,
+      vencimento: vencimento,
+      descricao: descricao,
       pago: false
     });
   }
@@ -309,7 +317,12 @@ function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagament
 
 function editarPaciente(index) {
   const paciente = pacientes[index];
-  if (!paciente) return;
+
+  // guarda valores antigos (pra decidir se regenera pagamentos)
+  const planoAntigo = paciente.plano || '';
+  const formaPagamentoAntiga = paciente.formaPagamento || 'vista';
+  const primeiraConsultaAntiga = paciente.primeiraConsulta || '';
+  const venc1Antigo = paciente.vencimentoPrimeiraParcela || null;
 
   document.getElementById('nomePaciente').value = paciente.nome;
   document.getElementById('idadePaciente').value = paciente.idade;
@@ -318,49 +331,61 @@ function editarPaciente(index) {
   document.getElementById('primeiraConsulta').value = paciente.primeiraConsulta || '';
   document.getElementById('proximoRetorno').value = paciente.proximoRetorno || '';
 
+  // novos campos
+  const hp = document.getElementById('horarioPrimeiraConsulta');
+  const hr = document.getElementById('horarioRetorno');
+  const vp = document.getElementById('vencimentoPrimeiraParcela');
+  if (hp) hp.value = paciente.horarioPrimeiraConsulta || '09:00';
+  if (hr) hr.value = paciente.horarioRetorno || '09:00';
+  if (vp) vp.value = paciente.vencimentoPrimeiraParcela || '';
+
   if (paciente.plano) {
     mostrarOpcaoPagamento();
-    const fp = document.getElementById('formaPagamento');
-    if (fp) fp.value = paciente.formaPagamento || 'vista';
+    document.getElementById('formaPagamento').value = paciente.formaPagamento || 'vista';
   }
 
-  const modal = document.getElementById('modalPaciente');
-  modal.classList.add('active');
-  modal.dataset.mode = 'edit';
+  document.getElementById('modalPaciente').classList.add('active');
 
-  const form = document.getElementById('formPaciente');
-
-  form.onsubmit = (e) => {
+  document.getElementById('formPaciente').onsubmit = (e) => {
     e.preventDefault();
 
     const planoNovo = document.getElementById('planoPaciente').value;
-    const planoAntigo = paciente.plano;
-
     const primeiraConsulta = document.getElementById('primeiraConsulta').value;
     const proximoRetorno = document.getElementById('proximoRetorno').value;
+    const formaPagamento = document.getElementById('formaPagamento').value;
 
-    const formaPagamentoEl = document.getElementById('formaPagamento');
-    const formaPagamento = (planoNovo === 'Mensal')
-      ? 'vista'
-      : (formaPagamentoEl ? formaPagamentoEl.value : 'vista');
-
-    const formaPagamentoAntiga = paciente.formaPagamento;
+    const horarioPrimeiraConsulta = normalizarHora(document.getElementById('horarioPrimeiraConsulta')?.value, '09:00');
+    const horarioRetorno = normalizarHora(document.getElementById('horarioRetorno')?.value, '09:00');
+    const venc1Novo = document.getElementById('vencimentoPrimeiraParcela')?.value || null;
 
     pacientes[index].nome = document.getElementById('nomePaciente').value;
     pacientes[index].idade = document.getElementById('idadePaciente').value;
     pacientes[index].whatsapp = document.getElementById('whatsappPaciente').value;
+
     pacientes[index].plano = planoNovo;
     pacientes[index].formaPagamento = formaPagamento;
+
     pacientes[index].primeiraConsulta = primeiraConsulta;
     pacientes[index].proximoRetorno = proximoRetorno;
 
-    if (planoNovo !== planoAntigo || formaPagamento !== formaPagamentoAntiga) {
+    pacientes[index].horarioPrimeiraConsulta = horarioPrimeiraConsulta;
+    pacientes[index].horarioRetorno = horarioRetorno;
+    pacientes[index].vencimentoPrimeiraParcela = venc1Novo;
+
+    // Regenera pagamentos se mudar: plano/forma/dataInicio/venc1
+    const mudouPagamento =
+      (planoNovo !== planoAntigo) ||
+      (formaPagamento !== formaPagamentoAntiga) ||
+      (primeiraConsulta !== primeiraConsultaAntiga) ||
+      (venc1Novo !== venc1Antigo);
+
+    if (mudouPagamento) {
       pagamentos = pagamentos.filter(p => p.pacienteId !== paciente.id);
-      gerarPagamentosAutomaticos(paciente.id, planoNovo, primeiraConsulta, formaPagamento);
+      gerarPagamentosAutomaticos(paciente.id, planoNovo, primeiraConsulta, formaPagamento, venc1Novo);
       localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
     }
 
-    // Atualiza consultas do paciente
+    // Regenera consultas do paciente (com as horas escolhidas)
     consultas = consultas.filter(c => c.pacienteIndex !== index);
 
     if (primeiraConsulta) {
@@ -368,7 +393,7 @@ function editarPaciente(index) {
         id: Date.now(),
         pacienteIndex: index,
         data: primeiraConsulta,
-        horario: '09:00',
+        horario: horarioPrimeiraConsulta,
         tipo: 'Primeira Consulta'
       });
     }
@@ -378,7 +403,7 @@ function editarPaciente(index) {
         id: Date.now() + 1,
         pacienteIndex: index,
         data: proximoRetorno,
-        horario: '09:00',
+        horario: horarioRetorno,
         tipo: 'Retorno'
       });
     }
@@ -392,26 +417,25 @@ function editarPaciente(index) {
     carregarCalendario();
     carregarPagamentos();
 
-    // volta submit padrão
-    form.onsubmit = salvarPaciente;
+    document.getElementById('formPaciente').onsubmit = salvarPaciente;
   };
-
-  focusPrimeiroCampo('modalPaciente');
 }
 
 function excluirPaciente(index) {
   const paciente = pacientes[index];
-  if (!paciente) return;
 
   if (confirm(`Tem certeza que deseja excluir ${paciente.nome}?\n\nIsso também apagará:\n• Consultas agendadas\n• Pagamentos\n• Prontuário`)) {
+    // Remove paciente
     pacientes.splice(index, 1);
 
     // Remove consultas do paciente excluído
     consultas = consultas.filter(c => c.pacienteIndex !== index);
 
-    // Atualiza índices de quem veio depois
+    // Atualiza índices das consultas dos pacientes seguintes
     consultas = consultas.map(c => {
-      if (c.pacienteIndex > index) return { ...c, pacienteIndex: c.pacienteIndex - 1 };
+      if (c.pacienteIndex > index) {
+        return { ...c, pacienteIndex: c.pacienteIndex - 1 };
+      }
       return c;
     });
 
@@ -434,8 +458,6 @@ function excluirPaciente(index) {
 // =====================
 function abrirModalProntuario(index) {
   const paciente = pacientes[index];
-  if (!paciente) return;
-
   const historico = paciente.prontuario?.historico || [];
 
   const modalHTML = `
@@ -444,9 +466,9 @@ function abrirModalProntuario(index) {
         <span class="close" onclick="fecharModal('modalProntuario')">&times;</span>
         <h2>Prontuário - ${paciente.nome}</h2>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h3 style="color: #667eea;">Histórico de Avaliações</h3>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 10px;">
             ${historico.length >= 2 ? `
               <button type="button" class="btn-secondary" onclick="mostrarGraficoEvolucao(${index})">
                 <i class="fas fa-chart-line"></i> Ver Evolução
@@ -469,25 +491,38 @@ function abrirModalProntuario(index) {
         </div>
 
         <div id="listaAvaliacoes" style="max-height: 500px; overflow-y: auto;">
-          ${
-            historico.length === 0
-              ? '<p style="text-align: center; color: #999; padding: 40px;">Nenhuma avaliação registrada ainda.</p>'
-              : historico.map((av, idx) => `
-                <div class="avaliacao-item" onclick="visualizarAvaliacao(${index}, ${idx})">
-                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <div>
-                      <strong style="font-size: 16px;">${new Date(av.data).toLocaleDateString('pt-BR')}</strong>
-                      <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
-                        Peso: ${av.peso ?? '-'} kg | IMC: ${av.imc ?? '-'} | Cintura: ${av.cintura ?? '-'} cm
-                      </p>
-                    </div>
-                    <button onclick="event.stopPropagation(); excluirAvaliacao(${index}, ${idx})"
-                      style="background: #fee; color: #ef4444; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
-                      <i class="fas fa-trash"></i>
-                    </button>
+          ${historico.length === 0 ?
+            '<p style="text-align: center; color: #999; padding: 40px;">Nenhuma avaliação registrada ainda.</p>'
+            : historico.map((av, idx) => `
+              <div class="avaliacao-item" onclick="visualizarAvaliacao(${index}, ${idx})" style="
+                background: #f8f9fa;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                border-left: 4px solid #667eea;
+                transition: all 0.3s;
+              " onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#f8f9fa'">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong style="font-size: 16px;">${new Date(av.data).toLocaleDateString('pt-BR')}</strong>
+                    <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+                      Peso: ${av.peso || '-'} kg | IMC: ${av.imc || '-'} | Cintura: ${av.cintura || '-'} cm
+                    </p>
                   </div>
+                  <button onclick="event.stopPropagation(); excluirAvaliacao(${index}, ${idx})" style="
+                    background: #fee;
+                    color: #ef4444;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                  ">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
-              `).reverse().join('')
+              </div>
+            `).reverse().join('')
           }
         </div>
       </div>
@@ -497,13 +532,8 @@ function abrirModalProntuario(index) {
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-/* ======= WIZARD: formulário segmentado ======= */
 function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
   const paciente = pacientes[pacienteIndex];
-  if (!paciente) return;
-
-  if (!paciente.prontuario) paciente.prontuario = { historico: [] };
-
   const avaliacao = avaliacaoIndex !== null ? paciente.prontuario.historico[avaliacaoIndex] : null;
   const titulo = avaliacao ? 'Editar Avaliação' : 'Nova Avaliação';
 
@@ -512,332 +542,175 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
       <span class="close" onclick="fecharModal('modalProntuario')">&times;</span>
       <h2>${titulo} - ${paciente.nome}</h2>
 
-      <div class="wizard" id="wizardAvaliacao">
-        <div class="wizard-top">
-          <div class="wizard-title">Preenchimento por etapas</div>
-          <div class="wizard-progress" aria-hidden="true"><div id="wizardBar"></div></div>
+      <form id="formAvaliacao" onsubmit="salvarAvaliacao(event, ${pacienteIndex}, ${avaliacaoIndex})">
+
+        <div class="form-group">
+          <label>Data da Avaliação *</label>
+          <input type="date" id="dataAvaliacao" value="${avaliacao?.data?.split('T')[0] || new Date().toISOString().split('T')[0]}" required>
         </div>
 
-        <div class="wizard-steps" id="wizardPills">
-          <div class="wizard-step-pill" data-step="1"><span class="n">1</span> Básico</div>
-          <div class="wizard-step-pill" data-step="2"><span class="n">2</span> Circunf.</div>
-          <div class="wizard-step-pill" data-step="3"><span class="n">3</span> Dobras</div>
-          <div class="wizard-step-pill" data-step="4"><span class="n">4</span> Dieta</div>
+        <h4 style="margin: 25px 0 15px; color: #667eea;">Medidas Antropométricas</h4>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Peso atual (kg)</label>
+            <input type="number" step="0.1" id="peso" value="${avaliacao?.peso || ''}">
+          </div>
+          <div class="form-group">
+            <label>Altura (m)</label>
+            <input type="number" step="0.01" id="altura" value="${avaliacao?.altura || ''}">
+          </div>
+          <div class="form-group">
+            <label>IMC (kg/m²)</label>
+            <input type="number" step="0.1" id="imc" value="${avaliacao?.imc || ''}" readonly style="background: #f0f0f0;">
+          </div>
         </div>
 
-        <div class="wizard-body">
-          <form id="formAvaliacao" onsubmit="salvarAvaliacao(event, ${pacienteIndex}, ${avaliacaoIndex})">
-
-            <!-- STEP 1 -->
-            <div class="wizard-step" data-step="1">
-              <div class="form-group compact">
-                <label>Data da Avaliação *</label>
-                <input type="date" id="dataAvaliacao"
-                  value="${avaliacao?.data?.split('T')[0] || new Date().toISOString().split('T')[0]}"
-                  required>
-              </div>
-
-              <h4 style="margin: 18px 0 10px; color: #667eea;">Medidas Antropométricas</h4>
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Peso</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="peso" value="${avaliacao?.peso ?? ''}" inputmode="decimal" placeholder="Ex: 72.5">
-                    <span class="unit">kg</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Altura</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.01" id="altura" value="${avaliacao?.altura ?? ''}" inputmode="decimal" placeholder="Ex: 1.72">
-                    <span class="unit">m</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>IMC</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="imc" value="${avaliacao?.imc ?? ''}" readonly style="background:#f0f0f0;">
-                    <span class="unit">kg/m²</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Peso usual</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="pesoUsual" value="${avaliacao?.pesoUsual ?? ''}" inputmode="decimal">
-                    <span class="unit">kg</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Peso ideal</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="pesoIdeal" value="${avaliacao?.pesoIdeal ?? ''}" inputmode="decimal">
-                    <span class="unit">kg</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Peso ajustado</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="pesoAjustado" value="${avaliacao?.pesoAjustado ?? ''}" inputmode="decimal">
-                    <span class="unit">kg</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- STEP 2 -->
-            <div class="wizard-step" data-step="2">
-              <h4 style="margin: 0 0 10px; color: #667eea;">Circunferências</h4>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Cintura</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="cintura" value="${avaliacao?.cintura ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Quadril</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="quadril" value="${avaliacao?.quadril ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Relação C/Q</label>
-                  <input type="number" step="0.01" id="relacaoCQ" value="${avaliacao?.relacaoCQ ?? ''}" readonly style="background:#f0f0f0;">
-                </div>
-              </div>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Braço</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="braco" value="${avaliacao?.braco ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Braço muscular</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="bracoMuscular" value="${avaliacao?.bracoMuscular ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Panturrilha</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="panturrilha" value="${avaliacao?.panturrilha ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Pescoço</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="pescoco" value="${avaliacao?.pescoco ?? ''}" inputmode="decimal">
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- STEP 3 -->
-            <div class="wizard-step" data-step="3">
-              <h4 style="margin: 0 0 10px; color: #667eea;">Dobras Cutâneas</h4>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Tricipital (DCT)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="dct" value="${avaliacao?.dct ?? ''}" inputmode="decimal">
-                    <span class="unit">mm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Bicipital (DCB)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="dcb" value="${avaliacao?.dcb ?? ''}" inputmode="decimal">
-                    <span class="unit">mm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Subescapular (DCSE)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="dcse" value="${avaliacao?.dcse ?? ''}" inputmode="decimal">
-                    <span class="unit">mm</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Supra-ilíaca (DCSI)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="dcsi" value="${avaliacao?.dcsi ?? ''}" inputmode="decimal">
-                    <span class="unit">mm</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- STEP 4 -->
-            <div class="wizard-step" data-step="4">
-              <h4 style="margin: 0 0 10px; color: #667eea;">Metabolismo, macros e conduta</h4>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>TMB</label>
-                  <div class="input-unit">
-                    <input type="number" id="tmb" value="${avaliacao?.tmb ?? ''}" inputmode="numeric">
-                    <span class="unit">kcal</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>VET</label>
-                  <div class="input-unit">
-                    <input type="number" id="vet" value="${avaliacao?.vet ?? ''}" inputmode="numeric">
-                    <span class="unit">kcal</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-row compact">
-                <div class="form-group compact">
-                  <label>Carbo (%)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="carbPct" value="${avaliacao?.carbPct ?? ''}" inputmode="decimal">
-                    <span class="unit">%</span>
-                  </div>
-                </div>
-                <div class="form-group compact">
-                  <label>Carbo (g)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="carbG" value="${avaliacao?.carbG ?? ''}" inputmode="decimal">
-                    <span class="unit">g</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Prot (%)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="protPct" value="${avaliacao?.protPct ?? ''}" inputmode="decimal">
-                    <span class="unit">%</span>
-                  </div>
-                </div>
-                <div class="form-group compact">
-                  <label>Prot (g)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="protG" value="${avaliacao?.protG ?? ''}" inputmode="decimal">
-                    <span class="unit">g</span>
-                  </div>
-                </div>
-
-                <div class="form-group compact">
-                  <label>Lip (%)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="lipPct" value="${avaliacao?.lipPct ?? ''}" inputmode="decimal">
-                    <span class="unit">%</span>
-                  </div>
-                </div>
-                <div class="form-group compact">
-                  <label>Lip (g)</label>
-                  <div class="input-unit">
-                    <input type="number" step="0.1" id="lipG" value="${avaliacao?.lipG ?? ''}" inputmode="decimal">
-                    <span class="unit">g</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group compact">
-                <label>Conduta Nutricional</label>
-                <textarea id="observacoes" rows="3" placeholder="Ex: reduzir ultraprocessados, ajustar proteína, aumentar fibras...">${avaliacao?.observacoes ?? ''}</textarea>
-              </div>
-            </div>
-
-            <div class="wizard-actions">
-              <button type="button" class="btn-secondary" onclick="abrirModalProntuario(${pacienteIndex})">Voltar</button>
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button type="button" class="btn-secondary" id="wizardPrev">Anterior</button>
-                <button type="button" class="btn-primary" id="wizardNext">Próximo</button>
-                <button type="submit" class="btn-primary" id="wizardSave" style="display:none;">Salvar</button>
-              </div>
-            </div>
-          </form>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Peso usual (kg)</label>
+            <input type="number" step="0.1" id="pesoUsual" value="${avaliacao?.pesoUsual || ''}">
+          </div>
+          <div class="form-group">
+            <label>Peso ideal (kg)</label>
+            <input type="number" step="0.1" id="pesoIdeal" value="${avaliacao?.pesoIdeal || ''}">
+          </div>
+          <div class="form-group">
+            <label>Peso ajustado (kg)</label>
+            <input type="number" step="0.1" id="pesoAjustado" value="${avaliacao?.pesoAjustado || ''}">
+          </div>
         </div>
-      </div>
+
+        <h4 style="margin: 25px 0 15px; color: #667eea;">Circunferências (cm)</h4>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Cintura</label>
+            <input type="number" step="0.1" id="cintura" value="${avaliacao?.cintura || ''}">
+          </div>
+          <div class="form-group">
+            <label>Quadril</label>
+            <input type="number" step="0.1" id="quadril" value="${avaliacao?.quadril || ''}">
+          </div>
+          <div class="form-group">
+            <label>Relação cintura/quadril</label>
+            <input type="number" step="0.01" id="relacaoCQ" value="${avaliacao?.relacaoCQ || ''}" readonly style="background: #f0f0f0;">
+          </div>
+        </div>
+
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Braço</label>
+            <input type="number" step="0.1" id="braco" value="${avaliacao?.braco || ''}">
+          </div>
+          <div class="form-group">
+            <label>Circunf. muscular braço</label>
+            <input type="number" step="0.1" id="bracoMuscular" value="${avaliacao?.bracoMuscular || ''}">
+          </div>
+          <div class="form-group">
+            <label>Panturrilha</label>
+            <input type="number" step="0.1" id="panturrilha" value="${avaliacao?.panturrilha || ''}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Pescoço (cm)</label>
+          <input type="number" step="0.1" id="pescoco" value="${avaliacao?.pescoco || ''}">
+        </div>
+
+        <h4 style="margin: 25px 0 15px; color: #667eea;">Dobras Cutâneas (mm)</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tricipital (DCT)</label>
+            <input type="number" step="0.1" id="dct" value="${avaliacao?.dct || ''}">
+          </div>
+          <div class="form-group">
+            <label>Bicipital (DCB)</label>
+            <input type="number" step="0.1" id="dcb" value="${avaliacao?.dcb || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Subescapular (DCSE)</label>
+            <input type="number" step="0.1" id="dcse" value="${avaliacao?.dcse || ''}">
+          </div>
+          <div class="form-group">
+            <label>Supra-ilíaca (DCSI)</label>
+            <input type="number" step="0.1" id="dcsi" value="${avaliacao?.dcsi || ''}">
+          </div>
+        </div>
+
+        <h4 style="margin: 25px 0 15px; color: #667eea;">Metabolismo e Dieta</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label>TMB (kcal)</label>
+            <input type="number" id="tmb" value="${avaliacao?.tmb || ''}">
+          </div>
+          <div class="form-group">
+            <label>VET (kcal)</label>
+            <input type="number" id="vet" value="${avaliacao?.vet || ''}">
+          </div>
+        </div>
+
+        <h4 style="margin: 25px 0 15px; color: #667eea;">Macronutrientes</h4>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="form-group">
+            <label>Carboidratos (%)</label>
+            <input type="number" step="0.1" id="carbPct" value="${avaliacao?.carbPct || ''}">
+          </div>
+          <div class="form-group">
+            <label>Carboidratos (g)</label>
+            <input type="number" step="0.1" id="carbG" value="${avaliacao?.carbG || ''}">
+          </div>
+        </div>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="form-group">
+            <label>Proteínas (%)</label>
+            <input type="number" step="0.1" id="protPct" value="${avaliacao?.protPct || ''}">
+          </div>
+          <div class="form-group">
+            <label>Proteínas (g)</label>
+            <input type="number" step="0.1" id="protG" value="${avaliacao?.protG || ''}">
+          </div>
+        </div>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="form-group">
+            <label>Lipídios (%)</label>
+            <input type="number" step="0.1" id="lipPct" value="${avaliacao?.lipPct || ''}">
+          </div>
+          <div class="form-group">
+            <label>Lipídios (g)</label>
+            <input type="number" step="0.1" id="lipG" value="${avaliacao?.lipG || ''}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Conduta Nutricional</label>
+          <textarea id="observacoes" rows="3" placeholder="Ex: Dieta hipocalórica, aumento de proteínas, redução de sódio...">${avaliacao?.observacoes || ''}</textarea>
+        </div>
+
+        <div class="form-buttons">
+          <button type="button" class="btn-secondary" onclick="abrirModalProntuario(${pacienteIndex})">Voltar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+        </div>
+      </form>
     </div>
   `;
 
-  // Mantém os cálculos automáticos (mesmos IDs que salvarAvaliacao usa)
   document.getElementById('peso').addEventListener('input', calcularIMC);
   document.getElementById('altura').addEventListener('input', calcularIMC);
   document.getElementById('cintura').addEventListener('input', calcularRelacaoCQ);
   document.getElementById('quadril').addEventListener('input', calcularRelacaoCQ);
 
-  initWizardAvaliacao(4);
-}
-
-function initWizardAvaliacao(totalSteps = 4) {
-  const wizard = document.getElementById('wizardAvaliacao');
-  if (!wizard) return;
-
-  const steps = Array.from(wizard.querySelectorAll('.wizard-step'));
-  const pills = Array.from(wizard.querySelectorAll('.wizard-step-pill'));
-  const bar = document.getElementById('wizardBar');
-
-  const btnPrev = document.getElementById('wizardPrev');
-  const btnNext = document.getElementById('wizardNext');
-  const btnSave = document.getElementById('wizardSave');
-
-  let step = 1;
-
-  function render() {
-    steps.forEach(s => s.classList.toggle('active', Number(s.dataset.step) === step));
-    pills.forEach(p => p.classList.toggle('active', Number(p.dataset.step) === step));
-
-    const pct = Math.round(((step - 1) / (totalSteps - 1)) * 100);
-    if (bar) bar.style.width = `${pct}%`;
-
-    btnPrev.disabled = step === 1;
-    btnNext.style.display = step === totalSteps ? 'none' : '';
-    btnSave.style.display = step === totalSteps ? '' : 'none';
-  }
-
-  function go(n) {
-    step = Math.min(totalSteps, Math.max(1, n));
-    render();
-
-    const first = wizard.querySelector(`.wizard-step[data-step="${step}"] input, .wizard-step[data-step="${step}"] select, .wizard-step[data-step="${step}"] textarea`);
-    if (first) setTimeout(() => first.focus(), 0);
-  }
-
-  btnPrev.addEventListener('click', () => go(step - 1));
-  btnNext.addEventListener('click', () => go(step + 1));
-  pills.forEach(p => p.addEventListener('click', () => go(Number(p.dataset.step))));
-
-  render();
-  go(1);
+  // NOVO: gramas automáticas a partir das porcentagens (4/4/9)
+  ['vet', 'carbPct', 'protPct', 'lipPct'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcularGramasMacrosPorPct);
+  });
+  calcularGramasMacrosPorPct();
 }
 
 function calcularIMC() {
   const peso = parseFloat(document.getElementById('peso').value);
   const altura = parseFloat(document.getElementById('altura').value);
-
   if (peso && altura) {
     const imc = (peso / (altura * altura)).toFixed(1);
     document.getElementById('imc').value = imc;
@@ -847,11 +720,43 @@ function calcularIMC() {
 function calcularRelacaoCQ() {
   const cintura = parseFloat(document.getElementById('cintura').value);
   const quadril = parseFloat(document.getElementById('quadril').value);
-
   if (cintura && quadril) {
     const relacao = (cintura / quadril).toFixed(2);
     document.getElementById('relacaoCQ').value = relacao;
   }
+}
+
+// =====================
+// NOVO: calcula gramas do macro a partir do VET e % preenchida
+// CHO = 4 kcal/g, PTN = 4 kcal/g, LIP = 9 kcal/g
+// =====================
+function calcularGramasMacrosPorPct() {
+  const vetEl = document.getElementById('vet');
+  if (!vetEl) return;
+
+  const vet = parseFloat(vetEl.value);
+  if (!Number.isFinite(vet) || vet <= 0) return;
+
+  const macros = [
+    { pctId: 'carbPct', gId: 'carbG', kcalPorG: 4 },
+    { pctId: 'protPct', gId: 'protG', kcalPorG: 4 },
+    { pctId: 'lipPct',  gId: 'lipG',  kcalPorG: 9 }
+  ];
+
+  macros.forEach(m => {
+    const pctEl = document.getElementById(m.pctId);
+    const gEl = document.getElementById(m.gId);
+    if (!pctEl || !gEl) return;
+
+    // Só calcula se a % foi preenchida (não mexe nas outras)
+    if (pctEl.value === '') return;
+
+    const pct = parseFloat(pctEl.value);
+    if (!Number.isFinite(pct) || pct < 0) return;
+
+    const g = (vet * (pct / 100)) / m.kcalPorG;
+    gEl.value = Number.isFinite(g) ? g.toFixed(1) : '';
+  });
 }
 
 function salvarAvaliacao(e, pacienteIndex, avaliacaoIndex) {
@@ -921,13 +826,14 @@ function excluirAvaliacao(pacienteIndex, avaliacaoIndex) {
 // =====================
 function mostrarGraficoEvolucao(pacienteIndex) {
   const paciente = pacientes[pacienteIndex];
-  const historico = paciente?.prontuario?.historico || [];
+  const historico = paciente.prontuario?.historico || [];
 
   if (historico.length < 2) {
     alert('É necessário pelo menos 2 avaliações para gerar o gráfico de evolução.');
     return;
   }
 
+  // Ordena por data
   const historicoOrdenado = [...historico].sort((a, b) => new Date(a.data) - new Date(b.data));
 
   const labels = historicoOrdenado.map(h => new Date(h.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
@@ -935,35 +841,82 @@ function mostrarGraficoEvolucao(pacienteIndex) {
   const imcs = historicoOrdenado.map(h => h.imc);
   const cinturas = historicoOrdenado.map(h => h.cintura);
 
+  // Mostra o container do gráfico
   document.getElementById('graficoEvolucao').style.display = 'block';
 
-  if (window.chartEvolucaoInstance) window.chartEvolucaoInstance.destroy();
+  // Destrói gráfico anterior se existir
+  if (window.chartEvolucaoInstance) {
+    window.chartEvolucaoInstance.destroy();
+  }
 
   const ctx = document.getElementById('chartEvolucao');
 
   window.chartEvolucaoInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: labels,
       datasets: [
-        { label: 'Peso (kg)', data: pesos, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.1)', tension: 0.4, yAxisID: 'y' },
-        { label: 'IMC', data: imcs, borderColor: '#764ba2', backgroundColor: 'rgba(118,75,162,0.1)', tension: 0.4, yAxisID: 'y1' },
-        { label: 'Cintura (cm)', data: cinturas, borderColor: '#f093fb', backgroundColor: 'rgba(240,147,251,0.1)', tension: 0.4, yAxisID: 'y2' }
+        {
+          label: 'Peso (kg)',
+          data: pesos,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y'
+        },
+        {
+          label: 'IMC',
+          data: imcs,
+          borderColor: '#764ba2',
+          backgroundColor: 'rgba(118, 75, 162, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1'
+        },
+        {
+          label: 'Cintura (cm)',
+          data: cinturas,
+          borderColor: '#f093fb',
+          backgroundColor: 'rgba(240, 147, 251, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y2'
+        }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { position: 'top' }, title: { display: false } },
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: false }
+      },
       scales: {
-        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Peso (kg)' } },
-        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'IMC' }, grid: { drawOnChartArea: false } },
-        y2: { type: 'linear', display: false, position: 'right' }
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: { display: true, text: 'Peso (kg)' }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: { display: true, text: 'IMC' },
+          grid: { drawOnChartArea: false }
+        },
+        y2: {
+          type: 'linear',
+          display: false,
+          position: 'right'
+        }
       }
     }
   });
 
+  // Scroll suave até o gráfico
   document.getElementById('graficoEvolucao').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -974,13 +927,13 @@ let mesAtual = new Date().getMonth();
 let anoAtual = new Date().getFullYear();
 
 function carregarCalendario() {
-  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   document.getElementById('mesAno').textContent = `${meses[mesAtual]} ${anoAtual}`;
 
   const grid = document.getElementById('calendarioGrid');
   grid.innerHTML = '';
 
-  const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   diasSemana.forEach(dia => {
     const header = document.createElement('div');
     header.className = 'calendar-day header';
@@ -991,24 +944,28 @@ function carregarCalendario() {
   const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
   const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
 
-  for (let i = 0; i < primeiroDia; i++) grid.appendChild(document.createElement('div'));
+  for (let i = 0; i < primeiroDia; i++) {
+    grid.appendChild(document.createElement('div'));
+  }
 
   const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  hoje.setHours(0, 0, 0, 0);
 
   for (let dia = 1; dia <= ultimoDia; dia++) {
     const dataAtual = new Date(anoAtual, mesAtual, dia);
-    dataAtual.setHours(0,0,0,0);
+    dataAtual.setHours(0, 0, 0, 0);
 
     const celula = document.createElement('div');
     celula.className = 'calendar-day';
     celula.textContent = dia;
 
-    if (dataAtual.getTime() === hoje.getTime()) celula.classList.add('today');
+    if (dataAtual.getTime() === hoje.getTime()) {
+      celula.classList.add('today');
+    }
 
     const consultasDia = consultas.filter(c => {
       const dataConsulta = new Date(c.data + 'T00:00:00');
-      dataConsulta.setHours(0,0,0,0);
+      dataConsulta.setHours(0, 0, 0, 0);
       return dataConsulta.getTime() === dataAtual.getTime();
     });
 
@@ -1027,12 +984,11 @@ function carregarCalendario() {
 
 function mostrarConsultasDia(data) {
   const container = document.getElementById('consultasDia');
-
   const consultasDia = consultas.filter(c => {
     const dataConsulta = new Date(c.data + 'T00:00:00');
-    dataConsulta.setHours(0,0,0,0);
+    dataConsulta.setHours(0, 0, 0, 0);
     const d = new Date(data);
-    d.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
     return dataConsulta.getTime() === d.getTime();
   });
 
@@ -1071,34 +1027,39 @@ function proximoMes() {
 }
 
 // =====================
-// CONSULTAS
+// Modal Nova Consulta
 // =====================
 function abrirModalNovaConsulta() {
   atualizarSelectsPacientes();
   document.getElementById('modalConsulta').classList.add('active');
   document.getElementById('formConsulta').reset();
-  focusPrimeiroCampo('modalConsulta');
+
+  const h = document.getElementById('horarioConsulta');
+  if (h && !h.value) h.value = '09:00';
 }
 
 function salvarConsulta(e) {
   e.preventDefault();
+  const pacienteIndex = document.getElementById('pacienteConsulta').selectedIndex - 1;
 
-  // Agora value = índice do paciente
-  const pacienteIndex = Number(document.getElementById('pacienteConsulta').value);
-  if (!Number.isFinite(pacienteIndex) || pacienteIndex < 0 || pacienteIndex >= pacientes.length) {
-    alert('Selecione um paciente válido.');
-    return;
-  }
+  const data = document.getElementById('dataConsulta').value;
+  const horario = document.getElementById('horarioConsulta')?.value || '';
+  const tipo = document.getElementById('tipoConsulta').value;
+
+  if (pacienteIndex < 0) return alert('Selecione um paciente.');
+  if (!data) return alert('Selecione a data.');
+  if (!horario) return alert('Selecione o horário.');
 
   consultas.push({
     id: Date.now(),
-    pacienteIndex,
-    data: document.getElementById('dataConsulta').value,
-    horario: document.getElementById('horarioConsulta').value,
-    tipo: document.getElementById('tipoConsulta').value
+    pacienteIndex: pacienteIndex,
+    data: data,
+    horario: horario,
+    tipo: tipo
   });
 
   localStorage.setItem('consultas', JSON.stringify(consultas));
+
   fecharModal('modalConsulta');
   carregarCalendario();
 }
@@ -1111,26 +1072,18 @@ function carregarPagamentos() {
   lista.innerHTML = '';
 
   let totalPago = 0, totalVencido = 0, totalPendente = 0;
-
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  const hoje = new Date().setHours(0, 0, 0, 0);
 
   if (pagamentos.length === 0) {
     lista.innerHTML = '<p style="text-align:center; padding:40px; color:#999;">Nenhum pagamento cadastrado ainda.</p>';
-    document.getElementById('totalPago').textContent = 'R$ 0,00';
-    document.getElementById('totalVencido').textContent = 'R$ 0,00';
-    document.getElementById('totalPendente').textContent = 'R$ 0,00';
-    return;
   }
 
   pagamentos.forEach((pagamento, index) => {
     const paciente = pacientes.find(p => p.id === pagamento.pacienteId);
     if (!paciente) return;
 
-    const vencimento = new Date(pagamento.vencimento + 'T00:00:00');
-    vencimento.setHours(0,0,0,0);
-
-    const valor = parseFloat(pagamento.valor) || 0;
+    const vencimento = new Date(pagamento.vencimento + 'T00:00:00').setHours(0, 0, 0, 0);
+    const valor = parseFloat(pagamento.valor);
 
     if (pagamento.pago) totalPago += valor;
     else if (vencimento < hoje) totalVencido += valor;
@@ -1144,20 +1097,18 @@ function carregarPagamentos() {
 
     item.innerHTML = `
       <div class="pagamento-info">
-        <h4 style="color: ${pagamento.pago ? '#059669' : '#2c3e50'};">${paciente.nome}</h4>
-        <p style="color: ${pagamento.pago ? '#047857' : '#666'};">
+        <h4 style="color: ${pagamento.pago ? '#059669' : '#2c3e50'}">${paciente.nome}</h4>
+        <p style="color: ${pagamento.pago ? '#047857' : '#666'}">
           <strong>Plano:</strong> ${paciente.plano || 'Não definido'} • ${pagamento.descricao || 'Pagamento'} •
           Vence em ${new Date(pagamento.vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}
         </p>
       </div>
-      <div class="pagamento-valor" style="color: ${pagamento.pago ? '#059669' : '#2c3e50'};">
-        R$ ${valor.toFixed(2)}
-      </div>
-      <div class="pagamento-status ${pagamento.pago ? 'pago' : (vencimento < hoje ? 'vencido' : '')}" onclick="togglePagamento(${index})">
+      <div class="pagamento-valor" style="color: ${pagamento.pago ? '#059669' : '#2c3e50'}">R$ ${valor.toFixed(2)}</div>
+      <div class="pagamento-status ${pagamento.pago ? 'pago' : (vencimento < hoje ? 'vencido' : '')}"
+           onclick="togglePagamento(${index})">
         ${pagamento.pago ? '<i class="fas fa-check" style="color:white;"></i>' : ''}
       </div>
     `;
-
     lista.appendChild(item);
   });
 
@@ -1167,7 +1118,6 @@ function carregarPagamentos() {
 }
 
 function togglePagamento(index) {
-  if (!pagamentos[index]) return;
   pagamentos[index].pago = !pagamentos[index].pago;
   localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
   carregarPagamentos();
@@ -1177,26 +1127,23 @@ function togglePagamento(index) {
 // UTILS
 // =====================
 function atualizarSelectsPacientes() {
-  const select = document.getElementById('pacienteConsulta');
-  if (!select) return;
-
-  select.innerHTML = '<option value="">Selecione...</option>';
-
-  pacientes.forEach((p, idx) => {
-    const opt = document.createElement('option');
-    opt.value = String(idx);
-    opt.textContent = p.nome;
-    select.appendChild(opt);
+  const selects = [document.getElementById('pacienteConsulta')];
+  selects.forEach(select => {
+    if (!select) return;
+    select.innerHTML = '<option value="">Selecione...</option>';
+    pacientes.forEach(p => {
+      select.innerHTML += `<option>${p.nome}</option>`;
+    });
   });
 }
 
 function fecharModal(id) {
   const modal = document.getElementById(id);
-  if (modal) modal.classList.remove('active');
-
-  if (id === 'modalProntuario') {
-    const dyn = document.getElementById('modalProntuario');
-    if (dyn) dyn.remove();
+  if (modal) {
+    modal.classList.remove('active');
+    if (id === 'modalProntuario') {
+      modal.remove();
+    }
   }
 }
 
@@ -1204,7 +1151,6 @@ function exportarBackup() {
   const dados = { pacientes, consultas, pagamentos };
   const blob = new Blob([JSON.stringify(dados)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement('a');
   a.href = url;
   a.download = `backup-nutricao-${new Date().toISOString().split('T')[0]}.json`;
@@ -1212,13 +1158,12 @@ function exportarBackup() {
 }
 
 function importarBackup(e) {
-  const file = e.target.files?.[0];
+  const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (event) => {
     const dados = JSON.parse(event.target.result);
-
     pacientes = dados.pacientes || [];
     consultas = dados.consultas || [];
     pagamentos = dados.pagamentos || [];
@@ -1231,122 +1176,4 @@ function importarBackup(e) {
     location.reload();
   };
   reader.readAsText(file);
-}
-
-// =====================
-// UX: Modal (ESC, clique fora, foco)
-// =====================
-function focusPrimeiroCampo(modalId) {
-  const modal = document.getElementById(modalId);
-  if (!modal) return;
-  const alvo = modal.querySelector('input, select, textarea, button');
-  if (alvo) setTimeout(() => alvo.focus(), 0);
-}
-
-function bindModalUX() {
-  // Clique fora fecha (fixos)
-  ['modalPaciente', 'modalConsulta'].forEach(id => {
-    const modal = document.getElementById(id);
-    if (!modal) return;
-    modal.addEventListener('mousedown', (e) => {
-      if (e.target === modal) fecharModal(id);
-    });
-  });
-
-  // Clique fora fecha (dinâmico prontuário)
-  document.addEventListener('mousedown', (e) => {
-    const dyn = document.getElementById('modalProntuario');
-    if (!dyn) return;
-    if (e.target === dyn) fecharModal('modalProntuario');
-  });
-
-  // ESC fecha modal ativo
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-
-    const dyn = document.getElementById('modalProntuario');
-    if (dyn?.classList.contains('active')) { fecharModal('modalProntuario'); return; }
-
-    ['modalPaciente', 'modalConsulta'].forEach(id => {
-      const modal = document.getElementById(id);
-      if (modal?.classList.contains('active')) fecharModal(id);
-    });
-  });
-}
-
-// =====================
-// UX: Rascunho (Novo Paciente)
-// =====================
-const DRAFT_PACIENTE_KEY = 'draft_formPaciente_v1';
-
-function getDraftPaciente() {
-  try { return JSON.parse(localStorage.getItem(DRAFT_PACIENTE_KEY) || 'null'); }
-  catch { return null; }
-}
-
-function setDraftPaciente(draft) {
-  localStorage.setItem(DRAFT_PACIENTE_KEY, JSON.stringify(draft));
-}
-
-function clearDraftPaciente() {
-  localStorage.removeItem(DRAFT_PACIENTE_KEY);
-}
-
-function coletarCamposPaciente() {
-  return {
-    nomePaciente: document.getElementById('nomePaciente')?.value || '',
-    idadePaciente: document.getElementById('idadePaciente')?.value || '',
-    whatsappPaciente: document.getElementById('whatsappPaciente')?.value || '',
-    planoPaciente: document.getElementById('planoPaciente')?.value || '',
-    formaPagamento: document.getElementById('formaPagamento')?.value || 'vista',
-    primeiraConsulta: document.getElementById('primeiraConsulta')?.value || '',
-    proximoRetorno: document.getElementById('proximoRetorno')?.value || ''
-  };
-}
-
-function aplicarDraftPacienteSeExistir() {
-  const modal = document.getElementById('modalPaciente');
-  if (!modal || modal.dataset.mode !== 'new') return;
-
-  const draft = getDraftPaciente();
-  if (!draft) return;
-
-  const nomeEl = document.getElementById('nomePaciente');
-  const idadeEl = document.getElementById('idadePaciente');
-  const wppEl = document.getElementById('whatsappPaciente');
-  const planoEl = document.getElementById('planoPaciente');
-  const primeiraEl = document.getElementById('primeiraConsulta');
-  const retornoEl = document.getElementById('proximoRetorno');
-  const formaEl = document.getElementById('formaPagamento');
-
-  if (nomeEl) nomeEl.value = draft.nomePaciente || '';
-  if (idadeEl) idadeEl.value = draft.idadePaciente || '';
-  if (wppEl) wppEl.value = draft.whatsappPaciente || '';
-  if (planoEl) planoEl.value = draft.planoPaciente || '';
-  if (primeiraEl) primeiraEl.value = draft.primeiraConsulta || '';
-  if (retornoEl) retornoEl.value = draft.proximoRetorno || '';
-
-  if (typeof mostrarOpcaoPagamento === 'function') mostrarOpcaoPagamento();
-  if (formaEl) formaEl.value = draft.formaPagamento || 'vista';
-}
-
-function bindAutosaveDraftPaciente() {
-  const ids = [
-    'nomePaciente','idadePaciente','whatsappPaciente',
-    'planoPaciente','formaPagamento','primeiraConsulta','proximoRetorno'
-  ];
-
-  const salvar = () => {
-    const modal = document.getElementById('modalPaciente');
-    if (!modal?.classList.contains('active')) return;
-    if (modal.dataset.mode !== 'new') return;
-    setDraftPaciente(coletarCamposPaciente());
-  };
-
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', salvar);
-    el.addEventListener('change', salvar);
-  });
 }

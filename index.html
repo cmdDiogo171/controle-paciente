@@ -14,10 +14,6 @@
   <div class="container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">
-        <i class="fas fa-apple-alt" aria-hidden="true"></i>
-        <h1>NutriSystem</h1>
-      </div>
 
       <nav class="nav" aria-label="Navegação principal">
         <a href="#" class="nav-item active" data-section="pacientes">
@@ -32,14 +28,15 @@
       </nav>
 
       <div class="sidebar-footer">
-        <button type="button" class="btn-secondary" onclick="exportarBackup()">
+        <button type="button" class="btn-secondary footer-btn" onclick="exportarBackup()">
           <i class="fas fa-download" aria-hidden="true"></i> Exportar Backup
         </button>
 
-        <label class="btn-secondary" style="cursor: pointer; margin-top: 10px; display: block; text-align: center;">
+        <button type="button" class="btn-secondary footer-btn" onclick="document.getElementById('importBackupInput').click()">
           <i class="fas fa-upload" aria-hidden="true"></i> Importar Backup
-          <input type="file" accept=".json" onchange="importarBackup(event)" style="display: none;">
-        </label>
+        </button>
+
+        <input id="importBackupInput" type="file" accept=".json" onchange="importarBackup(event)" style="display: none;">
       </div>
     </aside>
 
@@ -141,7 +138,6 @@
       <span class="close" onclick="fecharModal('modalPaciente')" aria-label="Fechar modal">&times;</span>
       <h2 id="tituloModalPaciente">Novo Paciente</h2>
 
-      <!-- Mantido: onsubmit="salvarPaciente(event)" e mesmos IDs -->
       <form id="formPaciente" onsubmit="salvarPaciente(event)">
         <div class="form-sections">
           <details class="form-block" open>
@@ -221,16 +217,38 @@
             <summary>
               Datas (opcional) <span class="badge">Rápido</span>
             </summary>
+
             <div class="details-body">
+              <!-- Datas -->
               <div class="form-row">
                 <div class="form-group">
                   <label for="primeiraConsulta">Data da Primeira Consulta</label>
                   <input type="date" id="primeiraConsulta" autocomplete="off">
                 </div>
+
                 <div class="form-group">
                   <label for="proximoRetorno">Data do Próximo Retorno</label>
                   <input type="date" id="proximoRetorno" autocomplete="off">
                 </div>
+              </div>
+
+              <!-- Horários (NOVO) -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="horarioPrimeiraConsulta">Horário 1ª consulta</label>
+                  <input type="time" id="horarioPrimeiraConsulta" value="09:00">
+                </div>
+
+                <div class="form-group">
+                  <label for="horarioRetorno">Horário retorno</label>
+                  <input type="time" id="horarioRetorno" value="09:00">
+                </div>
+              </div>
+
+              <!-- Vencimento 1ª parcela (NOVO) -->
+              <div class="form-group">
+                <label for="vencimentoPrimeiraParcela">Vencimento 1ª parcela</label>
+                <input type="date" id="vencimentoPrimeiraParcela" autocomplete="off">
               </div>
             </div>
           </details>
