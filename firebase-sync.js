@@ -1,7 +1,9 @@
 // firebase-sync.js  (carregar com <script type="module">)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCBHQ8Eblp8AqOc9rdWYD-JTb3Z_dIQEZE",
@@ -16,19 +18,34 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-await signInAnonymously(auth); // login automático sem senha [web:139]
+await signInAnonymously(auth);
 
-const ws = new URLSearchParams(location.search).get("ws") || "familia";
+// ws por link; se não tiver, cria um e fixa no URL + localStorage
+const params = new URLSearchParams(location.search);
+let ws = params.get("ws") || localStorage.getItem("__ws__");
+
+if (!ws) {
+  ws = (crypto.randomUUID?.() || (Date.now() + "-" + Math.random().toString(16).slice(2))).replace(/-/g, "").slice(0, 12);
+  localStorage.setItem("__ws__", ws);
+  params.set("ws", ws);
+  history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
+} else {
+  localStorage.setItem("__ws__", ws);
+}
+
 const ref = doc(db, "workspaces", ws);
+
+function applyCloudToLocalStorage(data) {
+  localStorage.setItem("pacientes", JSON.stringify(data.pacientes || []));
+  localStorage.setItem("consultas", JSON.stringify(data.consultas || []));
+  localStorage.setItem("pagamentos", JSON.stringify(data.pagamentos || []));
+  window.dispatchEvent(new Event("cloud-updated"));
+}
 
 window.cloudPull = async () => {
   const snap = await getDoc(ref);
   if (!snap.exists()) return false;
-  const data = snap.data();
-
-  localStorage.setItem("pacientes", JSON.stringify(data.pacientes || []));
-  localStorage.setItem("consultas", JSON.stringify(data.consultas || []));
-  localStorage.setItem("pagamentos", JSON.stringify(data.pagamentos || []));
+  applyCloudToLocalStorage(snap.data());
   return true;
 };
 
@@ -38,14 +55,16 @@ window.cloudPush = async () => {
     consultas: JSON.parse(localStorage.getItem("consultas") || "[]"),
     pagamentos: JSON.parse(localStorage.getItem("pagamentos") || "[]"),
     updatedAt: serverTimestamp(),
+    updatedBy: auth.currentUser?.uid || null
   };
   await setDoc(ref, dados, { merge: true });
 };
 
-// puxa do Firestore 1x e recarrega para o dashboard.js ler do localStorage
-(async () => {
-  if (sessionStorage.getItem("__pulled_cloud__") === "1") return;
-  const ok = await window.cloudPull();
-  sessionStorage.setItem("__pulled_cloud__", "1");
-  if (ok) location.reload();
-})();
+// 1º pull (se existir)
+await window.cloudPull().catch(() => {});
+
+// realtime: qualquer mudança em qualquer device atualiza localStorage
+onSnapshot(ref, (snap) => {
+  if (!snap.exists()) return;
+  applyCloudToLocalStorage(snap.data());
+});

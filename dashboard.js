@@ -7,6 +7,28 @@ let pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
 let consultas = JSON.parse(localStorage.getItem('consultas')) || [];
 let pagamentos = JSON.parse(localStorage.getItem('pagamentos')) || [];
 
+let __cloudPushTimer = null;
+
+function agendarCloudPush(delay = 600) {
+  if (!window.cloudPush) return;
+  clearTimeout(__cloudPushTimer);
+  __cloudPushTimer = setTimeout(() => {
+    Promise.resolve(window.cloudPush()).catch(console.warn);
+  }, delay);
+}
+
+window.addEventListener('cloud-updated', () => {
+  pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
+  consultas = JSON.parse(localStorage.getItem('consultas')) || [];
+  pagamentos = JSON.parse(localStorage.getItem('pagamentos')) || [];
+
+  limparConsultasInvalidas();
+  carregarPacientes();
+  carregarCalendario();
+  carregarPagamentos();
+});
+
+
 // Cores para pacientes
 const cores = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#30cfd0', '#a8edea'];
 
@@ -255,6 +277,8 @@ function salvarPaciente(e) {
 
   localStorage.setItem('pacientes', JSON.stringify(pacientes));
   localStorage.setItem('consultas', JSON.stringify(consultas));
+  agendarCloudPush();
+
 
   fecharModal('modalPaciente');
   carregarPacientes();
@@ -409,7 +433,11 @@ function editarPaciente(index) {
     }
 
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
+    agendarCloudPush();
+
     localStorage.setItem('consultas', JSON.stringify(consultas));
+    agendarCloudPush();
+
 
     fecharModal('modalPaciente');
     carregarPacientes();
@@ -445,6 +473,8 @@ function excluirPaciente(index) {
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
     localStorage.setItem('consultas', JSON.stringify(consultas));
     localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
+    agendarCloudPush();
+
 
     carregarPacientes();
     atualizarSelectsPacientes();
@@ -802,10 +832,12 @@ function salvarAvaliacao(e, pacienteIndex, avaliacaoIndex) {
     pacientes[pacienteIndex].prontuario.historico.push(novaAvaliacao);
   }
 
-  localStorage.setItem('pacientes', JSON.stringify(pacientes));
+localStorage.setItem('pacientes', JSON.stringify(pacientes));
+agendarCloudPush();
 
-  abrirModalProntuario(pacienteIndex);
-  carregarPacientes();
+abrirModalProntuario(pacienteIndex);
+carregarPacientes();
+
 }
 
 function visualizarAvaliacao(pacienteIndex, avaliacaoIndex) {
@@ -816,8 +848,11 @@ function excluirAvaliacao(pacienteIndex, avaliacaoIndex) {
   if (confirm('Tem certeza que deseja excluir esta avaliação?')) {
     pacientes[pacienteIndex].prontuario.historico.splice(avaliacaoIndex, 1);
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
-    abrirModalProntuario(pacienteIndex);
-    carregarPacientes();
+agendarCloudPush();
+
+abrirModalProntuario(pacienteIndex);
+carregarPacientes();
+
   }
 }
 
@@ -1059,6 +1094,8 @@ function salvarConsulta(e) {
   });
 
   localStorage.setItem('consultas', JSON.stringify(consultas));
+  agendarCloudPush();
+
 
   fecharModal('modalConsulta');
   carregarCalendario();
@@ -1120,6 +1157,7 @@ function carregarPagamentos() {
 function togglePagamento(index) {
   pagamentos[index].pago = !pagamentos[index].pago;
   localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
+  agendarCloudPush();
   carregarPagamentos();
 }
 
@@ -1173,12 +1211,10 @@ function importarBackup(e) {
     localStorage.setItem('consultas', JSON.stringify(consultas));
     localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
 
-    Promise
-      .resolve(window.cloudPush?.())
-      .finally(() => {
-        alert('Backup restaurado com sucesso!');
-        location.reload();
-      });
+    Promise.resolve(window.cloudPush?.()).finally(() => {
+      alert('Backup restaurado com sucesso!');
+      location.reload();
+    });
   };
 
   reader.readAsText(file);
