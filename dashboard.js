@@ -28,6 +28,10 @@ window.addEventListener('cloud-updated', () => {
   carregarPagamentos();
 });
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
 // Cores para pacientes
 const cores = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#30cfd0', '#a8edea'];
 
@@ -45,7 +49,11 @@ function limparConsultasInvalidas() {
 // Inicialização
 // =====================
 document.addEventListener('DOMContentLoaded', () => {
+<<<<<<< HEAD
   limparConsultasInvalidas();
+=======
+  limparConsultasInvalidas(); // LIMPA CONSULTAS INVÁLIDAS
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   inicializarNavegacao();
   carregarPacientes();
   carregarCalendario();
@@ -179,6 +187,10 @@ function abrirModalNovoPaciente() {
   document.getElementById('formPaciente').reset();
   document.getElementById('formaPagamentoDiv').style.display = 'none';
 
+<<<<<<< HEAD
+=======
+  // defaults
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   const hp = document.getElementById('horarioPrimeiraConsulta');
   const hr = document.getElementById('horarioRetorno');
   if (hp && !hp.value) hp.value = '09:00';
@@ -205,6 +217,10 @@ function mostrarOpcaoPagamento() {
   }
 }
 
+<<<<<<< HEAD
+=======
+// helpers
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
 function normalizarHora(valor, fallback = '09:00') {
   const v = (valor || '').trim();
   return v ? v : fallback;
@@ -237,15 +253,28 @@ function salvarPaciente(e) {
     formaPagamento: formaPagamento,
     primeiraConsulta: primeiraConsulta,
     proximoRetorno: proximoRetorno,
+<<<<<<< HEAD
     horarioPrimeiraConsulta,
     horarioRetorno,
     vencimentoPrimeiraParcela,
+=======
+
+    // novos campos (pra editar depois sem perder)
+    horarioPrimeiraConsulta,
+    horarioRetorno,
+    vencimentoPrimeiraParcela,
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     prontuario: { historico: [] }
   };
 
   const pacienteIndex = pacientes.length;
   pacientes.push(novoPaciente);
 
+<<<<<<< HEAD
+=======
+  // Base do vencimento: vencimentoPrimeiraParcela (se preenchido) senão primeiraConsulta
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   gerarPagamentosAutomaticos(novoPaciente.id, plano, primeiraConsulta, formaPagamento, vencimentoPrimeiraParcela);
 
   if (primeiraConsulta) {
@@ -272,6 +301,10 @@ function salvarPaciente(e) {
   localStorage.setItem('consultas', JSON.stringify(consultas));
   agendarCloudPush();
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   fecharModal('modalPaciente');
   carregarPacientes();
   atualizarSelectsPacientes();
@@ -279,9 +312,17 @@ function salvarPaciente(e) {
   carregarPagamentos();
 }
 
+<<<<<<< HEAD
 function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagamento, vencimentoInicial = null) {
   if (!plano || !dataInicio) return;
 
+=======
+// vencimentoInicial = data (YYYY-MM-DD) opcional para 1ª parcela
+function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagamento, vencimentoInicial = null) {
+  if (!plano || !dataInicio) return;
+
+  // Se o usuário escolheu o vencimento da 1ª parcela, ele manda.
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   const base = vencimentoInicial || dataInicio;
 
   let numParcelas = 0;
@@ -332,6 +373,10 @@ function gerarPagamentosAutomaticos(pacienteId, plano, dataInicio, formaPagament
 function editarPaciente(index) {
   const paciente = pacientes[index];
 
+<<<<<<< HEAD
+=======
+  // guarda valores antigos (pra decidir se regenera pagamentos)
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   const planoAntigo = paciente.plano || '';
   const formaPagamentoAntiga = paciente.formaPagamento || 'vista';
   const primeiraConsultaAntiga = paciente.primeiraConsulta || '';
@@ -344,6 +389,10 @@ function editarPaciente(index) {
   document.getElementById('primeiraConsulta').value = paciente.primeiraConsulta || '';
   document.getElementById('proximoRetorno').value = paciente.proximoRetorno || '';
 
+<<<<<<< HEAD
+=======
+  // novos campos
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   const hp = document.getElementById('horarioPrimeiraConsulta');
   const hr = document.getElementById('horarioRetorno');
   const vp = document.getElementById('vencimentoPrimeiraParcela');
@@ -373,14 +422,28 @@ function editarPaciente(index) {
     pacientes[index].nome = document.getElementById('nomePaciente').value;
     pacientes[index].idade = document.getElementById('idadePaciente').value;
     pacientes[index].whatsapp = document.getElementById('whatsappPaciente').value;
+<<<<<<< HEAD
     pacientes[index].plano = planoNovo;
     pacientes[index].formaPagamento = formaPagamento;
     pacientes[index].primeiraConsulta = primeiraConsulta;
     pacientes[index].proximoRetorno = proximoRetorno;
+=======
+
+    pacientes[index].plano = planoNovo;
+    pacientes[index].formaPagamento = formaPagamento;
+
+    pacientes[index].primeiraConsulta = primeiraConsulta;
+    pacientes[index].proximoRetorno = proximoRetorno;
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     pacientes[index].horarioPrimeiraConsulta = horarioPrimeiraConsulta;
     pacientes[index].horarioRetorno = horarioRetorno;
     pacientes[index].vencimentoPrimeiraParcela = venc1Novo;
 
+<<<<<<< HEAD
+=======
+    // Regenera pagamentos se mudar: plano/forma/dataInicio/venc1
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     const mudouPagamento =
       (planoNovo !== planoAntigo) ||
       (formaPagamento !== formaPagamentoAntiga) ||
@@ -393,6 +456,10 @@ function editarPaciente(index) {
       localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
     }
 
+<<<<<<< HEAD
+=======
+    // Regenera consultas do paciente (com as horas escolhidas)
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     consultas = consultas.filter(c => c.pacienteIndex !== index);
 
     if (primeiraConsulta) {
@@ -416,9 +483,18 @@ function editarPaciente(index) {
     }
 
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
+<<<<<<< HEAD
     localStorage.setItem('consultas', JSON.stringify(consultas));
     agendarCloudPush();
 
+=======
+    agendarCloudPush();
+
+    localStorage.setItem('consultas', JSON.stringify(consultas));
+    agendarCloudPush();
+
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     fecharModal('modalPaciente');
     carregarPacientes();
     atualizarSelectsPacientes();
@@ -433,9 +509,19 @@ function excluirPaciente(index) {
   const paciente = pacientes[index];
 
   if (confirm(`Tem certeza que deseja excluir ${paciente.nome}?\n\nIsso também apagará:\n• Consultas agendadas\n• Pagamentos\n• Prontuário`)) {
+<<<<<<< HEAD
     pacientes.splice(index, 1);
 
     consultas = consultas.filter(c => c.pacienteIndex !== index);
+=======
+    // Remove paciente
+    pacientes.splice(index, 1);
+
+    // Remove consultas do paciente excluído
+    consultas = consultas.filter(c => c.pacienteIndex !== index);
+
+    // Atualiza índices das consultas dos pacientes seguintes
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     consultas = consultas.map(c => {
       if (c.pacienteIndex > index) {
         return { ...c, pacienteIndex: c.pacienteIndex - 1 };
@@ -443,6 +529,10 @@ function excluirPaciente(index) {
       return c;
     });
 
+<<<<<<< HEAD
+=======
+    // Remove pagamentos
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     pagamentos = pagamentos.filter(p => p.pacienteId !== paciente.id);
 
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
@@ -450,6 +540,10 @@ function excluirPaciente(index) {
     localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
     agendarCloudPush();
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     carregarPacientes();
     atualizarSelectsPacientes();
     carregarCalendario();
@@ -655,7 +749,10 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
         </div>
 
         <h4 style="margin: 25px 0 15px; color: #667eea;">Macronutrientes</h4>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
         <div class="form-row" style="grid-template-columns: 1fr 1fr;">
           <div class="form-group">
             <label>Carboidratos (%)</label>
@@ -666,8 +763,12 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
             <input type="number" step="0.1" id="carbG" value="${avaliacao?.carbG || ''}">
           </div>
         </div>
+<<<<<<< HEAD
 
         <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+=======
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
           <div class="form-group">
             <label>Proteínas (%)</label>
             <input type="number" step="0.1" id="protPct" value="${avaliacao?.protPct || ''}">
@@ -676,12 +777,16 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
             <label>Proteínas (g)</label>
             <input type="number" step="0.1" id="protG" value="${avaliacao?.protG || ''}">
           </div>
+<<<<<<< HEAD
           <div class="form-group">
             <label>Proteínas (g/kg)</label>
             <input type="number" step="0.01" id="protGkg" value="${avaliacao?.protGkg || ''}" readonly style="background: #f0f0f0;">
           </div>
         </div>
 
+=======
+        </div>
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
         <div class="form-row" style="grid-template-columns: 1fr 1fr;">
           <div class="form-group">
             <label>Lipídios (%)</label>
@@ -711,11 +816,16 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
   document.getElementById('cintura').addEventListener('input', calcularRelacaoCQ);
   document.getElementById('quadril').addEventListener('input', calcularRelacaoCQ);
 
+<<<<<<< HEAD
+=======
+  // NOVO: gramas automáticas a partir das porcentagens (4/4/9)
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   ['vet', 'carbPct', 'protPct', 'lipPct'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', calcularGramasMacrosPorPct);
   });
   calcularGramasMacrosPorPct();
+<<<<<<< HEAD
 
   const calcProtGkg = () => {
     const protG = parseFloat(document.getElementById('protG').value);
@@ -729,13 +839,20 @@ function abrirFormularioAvaliacao(pacienteIndex, avaliacaoIndex = null) {
   document.getElementById('protG').addEventListener('input', calcProtGkg);
   document.getElementById('peso').addEventListener('input', calcProtGkg);
   calcProtGkg();
+=======
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
 }
 
 function calcularIMC() {
   const peso = parseFloat(document.getElementById('peso').value);
   const altura = parseFloat(document.getElementById('altura').value);
   if (peso && altura) {
+<<<<<<< HEAD
     document.getElementById('imc').value = (peso / (altura * altura)).toFixed(1);
+=======
+    const imc = (peso / (altura * altura)).toFixed(1);
+    document.getElementById('imc').value = imc;
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   }
 }
 
@@ -743,10 +860,22 @@ function calcularRelacaoCQ() {
   const cintura = parseFloat(document.getElementById('cintura').value);
   const quadril = parseFloat(document.getElementById('quadril').value);
   if (cintura && quadril) {
+<<<<<<< HEAD
     document.getElementById('relacaoCQ').value = (cintura / quadril).toFixed(2);
   }
 }
 
+=======
+    const relacao = (cintura / quadril).toFixed(2);
+    document.getElementById('relacaoCQ').value = relacao;
+  }
+}
+
+// =====================
+// NOVO: calcula gramas do macro a partir do VET e % preenchida
+// CHO = 4 kcal/g, PTN = 4 kcal/g, LIP = 9 kcal/g
+// =====================
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
 function calcularGramasMacrosPorPct() {
   const vetEl = document.getElementById('vet');
   if (!vetEl) return;
@@ -764,6 +893,11 @@ function calcularGramasMacrosPorPct() {
     const pctEl = document.getElementById(m.pctId);
     const gEl = document.getElementById(m.gId);
     if (!pctEl || !gEl) return;
+<<<<<<< HEAD
+=======
+
+    // Só calcula se a % foi preenchida (não mexe nas outras)
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     if (pctEl.value === '') return;
 
     const pct = parseFloat(pctEl.value);
@@ -802,7 +936,10 @@ function salvarAvaliacao(e, pacienteIndex, avaliacaoIndex) {
     carbG: parseFloat(document.getElementById('carbG').value) || null,
     protPct: parseFloat(document.getElementById('protPct').value) || null,
     protG: parseFloat(document.getElementById('protG').value) || null,
+<<<<<<< HEAD
     protGkg: parseFloat(document.getElementById('protGkg').value) || null,
+=======
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
     lipPct: parseFloat(document.getElementById('lipPct').value) || null,
     lipG: parseFloat(document.getElementById('lipG').value) || null,
     observacoes: document.getElementById('observacoes').value
@@ -818,11 +955,20 @@ function salvarAvaliacao(e, pacienteIndex, avaliacaoIndex) {
     pacientes[pacienteIndex].prontuario.historico.push(novaAvaliacao);
   }
 
+<<<<<<< HEAD
   localStorage.setItem('pacientes', JSON.stringify(pacientes));
   agendarCloudPush();
 
   abrirModalProntuario(pacienteIndex);
   carregarPacientes();
+=======
+localStorage.setItem('pacientes', JSON.stringify(pacientes));
+agendarCloudPush();
+
+abrirModalProntuario(pacienteIndex);
+carregarPacientes();
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
 }
 
 function visualizarAvaliacao(pacienteIndex, avaliacaoIndex) {
@@ -833,10 +979,18 @@ function excluirAvaliacao(pacienteIndex, avaliacaoIndex) {
   if (confirm('Tem certeza que deseja excluir esta avaliação?')) {
     pacientes[pacienteIndex].prontuario.historico.splice(avaliacaoIndex, 1);
     localStorage.setItem('pacientes', JSON.stringify(pacientes));
+<<<<<<< HEAD
     agendarCloudPush();
 
     abrirModalProntuario(pacienteIndex);
     carregarPacientes();
+=======
+agendarCloudPush();
+
+abrirModalProntuario(pacienteIndex);
+carregarPacientes();
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   }
 }
 
@@ -852,14 +1006,27 @@ function mostrarGraficoEvolucao(pacienteIndex) {
     return;
   }
 
+<<<<<<< HEAD
   const historicoOrdenado = [...historico].sort((a, b) => new Date(a.data) - new Date(b.data));
+=======
+  // Ordena por data
+  const historicoOrdenado = [...historico].sort((a, b) => new Date(a.data) - new Date(b.data));
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   const labels = historicoOrdenado.map(h => new Date(h.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
   const pesos = historicoOrdenado.map(h => h.peso);
   const imcs = historicoOrdenado.map(h => h.imc);
   const cinturas = historicoOrdenado.map(h => h.cintura);
 
+<<<<<<< HEAD
   document.getElementById('graficoEvolucao').style.display = 'block';
 
+=======
+  // Mostra o container do gráfico
+  document.getElementById('graficoEvolucao').style.display = 'block';
+
+  // Destrói gráfico anterior se existir
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   if (window.chartEvolucaoInstance) {
     window.chartEvolucaoInstance.destroy();
   }
@@ -900,7 +1067,14 @@ function mostrarGraficoEvolucao(pacienteIndex) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+<<<<<<< HEAD
       interaction: { mode: 'index', intersect: false },
+=======
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
       plugins: {
         legend: { position: 'top' },
         title: { display: false }
@@ -928,6 +1102,10 @@ function mostrarGraficoEvolucao(pacienteIndex) {
     }
   });
 
+<<<<<<< HEAD
+=======
+  // Scroll suave até o gráfico
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   document.getElementById('graficoEvolucao').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -1072,6 +1250,10 @@ function salvarConsulta(e) {
   localStorage.setItem('consultas', JSON.stringify(consultas));
   agendarCloudPush();
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
   fecharModal('modalConsulta');
   carregarCalendario();
 }
@@ -1160,6 +1342,7 @@ function fecharModal(id) {
   }
 }
 
+<<<<<<< HEAD
 window.addEventListener('cloud-updated', () => {
   pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
   consultas = JSON.parse(localStorage.getItem('consultas')) || [];
@@ -1171,3 +1354,39 @@ window.addEventListener('cloud-updated', () => {
 
   console.log("Sistema sincronizado com a nuvem!");
 });
+=======
+function exportarBackup() {
+  const dados = { pacientes, consultas, pagamentos };
+  const blob = new Blob([JSON.stringify(dados)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-nutricao-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importarBackup(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const dados = JSON.parse(event.target.result);
+
+    pacientes = dados.pacientes || [];
+    consultas = dados.consultas || [];
+    pagamentos = dados.pagamentos || [];
+
+    localStorage.setItem('pacientes', JSON.stringify(pacientes));
+    localStorage.setItem('consultas', JSON.stringify(consultas));
+    localStorage.setItem('pagamentos', JSON.stringify(pagamentos));
+
+    Promise.resolve(window.cloudPush?.()).finally(() => {
+      alert('Backup restaurado com sucesso!');
+      location.reload();
+    });
+  };
+
+  reader.readAsText(file);
+}
+>>>>>>> 3c9fedb5ef6568ca5cc896833cfe48012a74de0f
