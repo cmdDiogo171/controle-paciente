@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,19 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
   <title>Controle de Pacientes</title>
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="dashboard.css">
 </head>
-
 <body>
   <div class="container">
-    <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">
-        <!-- logo removida -->
-      </div>
-
+      <div class="logo"></div>
       <nav class="nav" aria-label="Navegação principal">
         <a href="#" class="nav-item active" data-section="pacientes">
           <i class="fas fa-users" aria-hidden="true"></i> Pacientes
@@ -32,7 +25,6 @@
       </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
       <!-- PACIENTES -->
       <section id="pacientes" class="content-section active">
@@ -42,19 +34,10 @@
             <i class="fas fa-plus" aria-hidden="true"></i> Novo Paciente
           </button>
         </div>
-
         <div class="search-box">
           <i class="fas fa-search" aria-hidden="true"></i>
-          <input
-            type="text"
-            id="searchPaciente"
-            placeholder="Buscar paciente..."
-            onkeyup="filtrarPacientes()"
-            autocomplete="off"
-            spellcheck="false"
-          >
+          <input type="text" id="searchPaciente" placeholder="Buscar paciente..." onkeyup="filtrarPacientes()" autocomplete="off" spellcheck="false">
         </div>
-
         <div id="listaPacientes"></div>
       </section>
 
@@ -67,6 +50,11 @@
           </button>
         </div>
 
+        <div class="search-box" style="margin-bottom: 16px;">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input type="text" id="searchCalendario" placeholder="Filtrar por paciente no calendário..." onkeyup="filtrarCalendario()" autocomplete="off" spellcheck="false">
+        </div>
+
         <div class="calendar-container">
           <div class="calendar-header">
             <button type="button" class="btn-secondary" onclick="mesAnterior()" aria-label="Mês anterior">
@@ -77,7 +65,6 @@
               <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
           </div>
-
           <div id="calendarioGrid" class="calendar-grid"></div>
         </div>
 
@@ -92,33 +79,20 @@
         <div class="section-header">
           <h2>Controle de Pagamentos</h2>
         </div>
-
         <div class="stats-grid">
           <div class="stat-card" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
             <i class="fas fa-check-circle" style="color: #059669;" aria-hidden="true"></i>
-            <div>
-              <p>Total Pago</p>
-              <h3 id="totalPago" style="color: #059669;">R$ 0,00</h3>
-            </div>
+            <div><p>Total Pago</p><h3 id="totalPago" style="color: #059669;">R$ 0,00</h3></div>
           </div>
-
           <div class="stat-card" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
             <i class="fas fa-exclamation-circle" style="color: #dc2626;" aria-hidden="true"></i>
-            <div>
-              <p>Vencidos</p>
-              <h3 id="totalVencido" style="color: #dc2626;">R$ 0,00</h3>
-            </div>
+            <div><p>Vencidos</p><h3 id="totalVencido" style="color: #dc2626;">R$ 0,00</h3></div>
           </div>
-
           <div class="stat-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
             <i class="fas fa-clock" style="color: #d97706;" aria-hidden="true"></i>
-            <div>
-              <p>Pendentes</p>
-              <h3 id="totalPendente" style="color: #d97706;">R$ 0,00</h3>
-            </div>
+            <div><p>Pendentes</p><h3 id="totalPendente" style="color: #d97706;">R$ 0,00</h3></div>
           </div>
         </div>
-
         <div id="listaPagamentos"></div>
       </section>
     </main>
@@ -129,13 +103,10 @@
     <div class="modal-content">
       <span class="close" onclick="fecharModal('modalPaciente')" aria-label="Fechar modal">&times;</span>
       <h2 id="tituloModalPaciente">Novo Paciente</h2>
-
       <form id="formPaciente" onsubmit="salvarPaciente(event)">
         <div class="form-sections">
           <details class="form-block" open>
-            <summary>
-              Dados básicos <span class="badge">Obrigatório</span>
-            </summary>
+            <summary>Dados básicos <span class="badge">Obrigatório</span></summary>
             <div class="details-body">
               <div class="form-row">
                 <div class="form-group">
@@ -147,7 +118,6 @@
                   <input type="number" id="idadePaciente" required min="0" max="120" inputmode="numeric" placeholder="Ex: 32">
                 </div>
               </div>
-
               <div class="form-group">
                 <label for="whatsappPaciente">WhatsApp</label>
                 <input type="tel" id="whatsappPaciente" inputmode="tel" autocomplete="tel" placeholder="(21) 99999-9999">
@@ -156,9 +126,7 @@
           </details>
 
           <details class="form-block" open>
-            <summary>
-              Plano e pagamento <span class="badge">Obrigatório</span>
-            </summary>
+            <summary>Plano e pagamento <span class="badge">Obrigatório</span></summary>
             <div class="details-body">
               <div class="form-row">
                 <div class="form-group">
@@ -171,7 +139,6 @@
                   </select>
                 </div>
               </div>
-
               <div id="formaPagamentoDiv" style="display: none;">
                 <div class="form-group">
                   <label for="formaPagamento">Forma de Pagamento *</label>
@@ -186,35 +153,28 @@
           </details>
 
           <details class="form-block">
-            <summary>
-              Datas (opcional) <span class="badge">Rápido</span>
-            </summary>
-
+            <summary>Datas (opcional) <span class="badge">Rápido</span></summary>
             <div class="details-body">
               <div class="form-row">
                 <div class="form-group">
                   <label for="primeiraConsulta">Data da Primeira Consulta</label>
                   <input type="date" id="primeiraConsulta" autocomplete="off">
                 </div>
-
                 <div class="form-group">
                   <label for="proximoRetorno">Data do Próximo Retorno</label>
                   <input type="date" id="proximoRetorno" autocomplete="off">
                 </div>
               </div>
-
               <div class="form-row">
                 <div class="form-group">
                   <label for="horarioPrimeiraConsulta">Horário 1ª consulta</label>
                   <input type="time" id="horarioPrimeiraConsulta" value="09:00">
                 </div>
-
                 <div class="form-group">
                   <label for="horarioRetorno">Horário retorno</label>
                   <input type="time" id="horarioRetorno" value="09:00">
                 </div>
               </div>
-
               <div class="form-group">
                 <label for="vencimentoPrimeiraParcela">Vencimento 1ª parcela</label>
                 <input type="date" id="vencimentoPrimeiraParcela" autocomplete="off">
@@ -222,7 +182,6 @@
             </div>
           </details>
         </div>
-
         <div class="form-buttons">
           <button type="button" class="btn-secondary" onclick="fecharModal('modalPaciente')">Cancelar</button>
           <button type="submit" class="btn-primary">Salvar</button>
@@ -236,7 +195,6 @@
     <div class="modal-content">
       <span class="close" onclick="fecharModal('modalConsulta')" aria-label="Fechar modal">&times;</span>
       <h2 id="tituloModalConsulta">Nova Consulta</h2>
-
       <form id="formConsulta" onsubmit="salvarConsulta(event)">
         <div class="form-group">
           <label for="pacienteConsulta">Paciente *</label>
@@ -244,7 +202,6 @@
             <option value="">Selecione...</option>
           </select>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label for="dataConsulta">Data *</label>
@@ -255,7 +212,6 @@
             <input type="time" id="horarioConsulta" required>
           </div>
         </div>
-
         <div class="form-group">
           <label for="tipoConsulta">Tipo de Consulta *</label>
           <select id="tipoConsulta" required>
@@ -264,7 +220,6 @@
             <option value="Avaliação">Avaliação</option>
           </select>
         </div>
-
         <div class="form-buttons">
           <button type="button" class="btn-secondary" onclick="fecharModal('modalConsulta')">Cancelar</button>
           <button type="submit" class="btn-primary">Salvar</button>
@@ -273,13 +228,8 @@
     </div>
   </div>
 
-  <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Firebase sync (TEM que vir antes do dashboard.js) -->
   <script type="module" src="firebase-sync.js"></script>
-
-  <!-- Seu app -->
   <script src="dashboard.js" defer></script>
 </body>
 </html>
